@@ -3,7 +3,7 @@
 // One run serves everyone: the dashboard and the digest personalise from this file.
 //
 // Usage: GITHUB_TOKEN=... node src/collect.mjs [--out site/data.json]
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { loadConfig, loadSubscribers } from './config.mjs';
 import { extractMentions } from './mentions.mjs';
@@ -212,6 +212,22 @@ const data = {
 
 await mkdir(dirname(out), { recursive: true });
 await writeFile(out, JSON.stringify(data));
+
+// Stamp a version on the page's own scripts, so a browser never mixes a new page with an older
+// cached logic.js/app.js after a deploy (GitHub Pages caches files for ~10 minutes).
+const siteDir = dirname(out);
+const stamp = Date.now().toString(36);
+for (const [file, pattern, replacement] of [
+  ['index.html', /from '\.\/logic\.js(\?v=[\w]+)?'/g, `from './logic.js?v=${stamp}'`],
+  ['app.js', /from '\.\/logic\.js(\?v=[\w]+)?'/g, `from './logic.js?v=${stamp}'`],
+  ['classic.html', /src="app\.js(\?v=[\w]+)?"/g, `src="app.js?v=${stamp}"`],
+]) {
+  try {
+    const path = `${siteDir}/${file}`;
+    const text = await readFile(path, 'utf8');
+    await writeFile(path, text.replace(pattern, replacement));
+  } catch { /* file not present: nothing to stamp */ }
+}
 console.log(
   `Wrote ${out}: ${issues.length} issues, ${pulls.length} PRs, ${areas.length} areas in ${Math.round((Date.now() - started) / 1000)}s`,
 );
