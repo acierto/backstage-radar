@@ -396,7 +396,7 @@ function renderAreas() {
 // ---------------- radar scope ----------------
 const QUADS = [
   { key: 'reply', label: 'WAITING ON YOU', start: -90 },
-  { key: 'mine', label: 'YOUR ITEMS', start: 0, also: ['activity'] },
+  { key: 'mine', label: 'FOLLOW-UPS', start: 0, also: ['activity'] },
   { key: 'fresh', label: 'NEW IN AREA', start: 90 },
   { key: 'waiting', label: 'THEIR MOVE', start: 180 },
 ];
@@ -575,11 +575,11 @@ function render() {
     ? `<div class="eyebrow">Right now</div>
        <h1 class="headline"><em>${np} ${np === 1 ? 'person is' : 'people are'}</em> waiting on you</h1>
        <div class="stats"><span><b>${n}</b> ${n === 1 ? 'item' : 'items'}</span><span>oldest <b>${humanAge(oldest.since, now)}</b></span>
-         <span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> 30 days ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
+         <span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> a month ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
        <div class="people">${shown.map(personCard).join('')}${ppl.length > shown.length ? `<button class="person more" data-tab="reply">+ ${ppl.length - shown.length} more people · see the board</button>` : ''}</div>`
     : `<div class="eyebrow">Right now</div>
        <h1 class="headline calm">Nobody is waiting on <em>you</em></h1>
-       <div class="stats"><span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> 30 days ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
+       <div class="stats"><span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> a month ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
        <div class="allclear">All pings answered. Have a look at <b>${live.filter((r) => r.bucket === 'fresh').length}</b> new items in your areas below, or enjoy the quiet.</div>`;
 
   main.innerHTML = `
