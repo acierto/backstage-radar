@@ -350,6 +350,31 @@
   .hcard .hc-open { margin-left: auto; color: var(--accent); font-weight: 600; }
   @media (prefers-reduced-motion: no-preference) { .hcard:not([hidden]) { animation: hc-in .14s ease-out; } }
   @keyframes hc-in { from { opacity: 0; transform: translateY(4px) scale(.985); } }
+  .pcard { pointer-events: auto; width: 380px; --c: var(--accent); --c-ink: var(--accent); }
+  .pp { cursor: pointer; }
+  .from.pp:hover span, .who-name.pp:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .pc-you { font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 6px; vertical-align: 2px; }
+  .pc-gh { margin-left: auto; flex: none; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .pc-gh:hover { text-decoration: underline; }
+  .pc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .pc-tiles div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .pc-tiles b { display: block; font: 600 20px/1.1 var(--font-mono); }
+  .pc-tiles span { font-size: 11.5px; color: var(--ink-2); }
+  .pc-tiles .hot { border-color: color-mix(in srgb, var(--question) 45%, transparent); background: color-mix(in srgb, var(--question) 10%, var(--panel)); }
+  .pc-tiles .hot b { color: var(--question-ink); }
+  .pc-list { display: flex; flex-direction: column; gap: 2px; }
+  .pc-h { font: 600 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .pc-ask { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 8px; align-items: center; text-decoration: none; color: var(--ink); padding: 5px 6px; border-radius: 6px; font-size: 13px; }
+  .pc-ask:hover { background: var(--panel-2); }
+  .pc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .pc-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-t .n { font-family: var(--font-mono); color: var(--ink-3); }
+  .pc-age { font: 600 12px var(--font-mono); color: var(--ink-2); }
+  .pc-age.over { color: var(--overdue); }
+  .pc-more { font-size: 12px; color: var(--ink-3); padding: 2px 6px; }
+  .pc-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pc-meta span { font-size: 12px; color: var(--ink-2); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+  .pc-meta b { color: var(--ink); }
   .tip { position: fixed; z-index: 30; pointer-events: none; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
   .tip b { display: block; font-size: 13px; margin-bottom: 2px; }
   .tip .k { color: var(--ink-3); font-family: var(--font-mono); }
@@ -437,6 +462,7 @@
 </dialog>
 <div class="tip" id="tip" hidden></div>
 <div class="hcard" id="hcard" role="tooltip" hidden></div>
+<div class="hcard pcard" id="pcard" role="dialog" aria-label="Person" hidden></div>
 
 <script type="module">
 import { classify, humanAge, itemAreas, DAY, withoutBots } from './logic.js';
@@ -750,7 +776,7 @@ function lanes(now) {
     const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = mode === 'me' && days > OVERDUE_DAYS;
     const left = xPos(days);
     return `<a class="lane" data-n="${r.item.n}" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}">
-      <div class="id">${avatar(r.who, 34)}<div style="min-width:0"><div><span class="who-name">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
+      <div class="id"><span class="pp" data-person="${esc(r.who)}">${avatar(r.who, 34)}</span><div style="min-width:0"><div><span class="who-name pp" data-person="${esc(r.who)}">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
         <div class="ttl"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}</div></div></div>
       <div class="track">${grid}<span class="span" style="left:${left}%;right:0"></span><span class="start" style="left:${left}%"></span></div>
       <div class="age ${over ? 'over' : ''}">${over ? humanAge(r.since, now) : w.v}<small>${over ? 'overdue' : w.u}</small></div></a>`;
@@ -1085,7 +1111,9 @@ function renderInner() {
 }
 
 function renderBoard(now, facts) {
-  const q = state.query.trim().toLowerCase().replace(/^[#@]/, '');
+  const raw = state.query.trim().toLowerCase();
+  const q = raw.replace(/^[#@]/, '');
+  const exactPerson = raw.startsWith('@') ? q : null;
   const cut = lastVisit ? Date.parse(lastVisit) : now - DAY;
   if (state.filter) {
     const f = facts.find((x) => x.key === state.filter);
@@ -1094,7 +1122,8 @@ function renderBoard(now, facts) {
   } else {
     boardRows = rows.filter((r) => r.bucket === state.tab);
   }
-  if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
+  if (exactPerson) boardRows = boardRows.filter((r) => lc(r.who) === exactPerson || lc(r.item.author) === exactPerson || r.item.ev.some((e) => lc(e[1]) === exactPerson));
+  else if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
   boardRows = [...boardRows].sort(SORTS[state.sort]?.cmp || SORTS.newest.cmp);
   const ul = $('#strips');
   if (!boardRows.length) {
@@ -1113,7 +1142,7 @@ function renderBoard(now, facts) {
       <div class="cs"><b>#${it.n}</b><small>${it.t === 'pr' ? (it.draft ? 'draft pr' : 'pr') : 'issue'}</small></div>
       <div class="st"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
         <div class="m">${isNew ? '<span class="newtag">NEW</span>' : ''}<span class="act">${esc(a.label)}</span>${itemAreas(it).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}${r.myLast && r.bucket !== 'reply' ? `<span>you: ${humanAge(r.myLast, now)} ago</span>` : ''}</div></div>
-      <div class="from">${avatar(r.who, 24)}<span>@${esc(r.who)}</span></div>
+      <div class="from pp" data-person="${esc(r.who)}" title="Show everything with @${esc(r.who)}">${avatar(r.who, 24)}<span>@${esc(r.who)}</span></div>
       <div class="tm"><b class="${over ? 'over' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b></div>
     </li>`;
   }).join('') + (boardRows.length > state.limit ? `<li><button class="more-btn" id="more">Show ${boardRows.length - state.limit} more</button></li>` : '');
@@ -1186,6 +1215,7 @@ function showCard(el, anchor, delay = 280) {
 }
 function hideCard() { clearTimeout(hcTimer); hcard.hidden = true; hcFor = null; }
 document.addEventListener('mouseover', (e) => {
+  if (e.target.closest('[data-person], #pcard')) { hideCard(); return; }
   const lane = e.target.closest('.lane[data-n]');
   const strip = !lane && e.target.closest('.strip[data-n] .st');
   const host = lane || strip?.closest('.strip');
@@ -1196,6 +1226,99 @@ document.addEventListener('mouseover', (e) => {
 document.addEventListener('focusin', (e) => { const lane = e.target.closest?.('.lane[data-n]'); if (lane) showCard(lane, lane.querySelector('.id'), 0); });
 document.addEventListener('focusout', (e) => { if (e.target.closest?.('.lane[data-n]')) hideCard(); });
 addEventListener('scroll', hideCard, { passive: true });
+
+// ---------------- person card ----------------
+const pcard = $('#pcard');
+let pcTimer = null, pcHide = null, pcFor = null;
+function personStats(login, now) {
+  const who = lc(login), user = state.user;
+  const asks = rows.filter((r) => r.bucket === 'reply' && lc(r.who) === who).sort((a, b) => (a.since < b.since ? -1 : 1));
+  const theirMove = rows.filter((r) => r.bucket === 'waiting' && lc(r.item.author) === who).length;
+  const opened = data.items.filter((i) => lc(i.author) === who);
+  const inAreas = opened.filter((i) => { const a = itemAreas(i); return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x)); }).length;
+  let last = null, pings90 = 0, waits = [];
+  const since90 = new Date(now - 90 * DAY).toISOString();
+  for (const it of data.items) {
+    let open = null;
+    for (const [at, actor, kind, mentions = [], , acks = []] of it.ev) {
+      const a = lc(actor);
+      if (a === who && (!last || at > last)) last = at;
+      if (a === who && mentions.includes(user) && !acks.includes(user) && !open) { open = at; if (at >= since90) pings90++; }
+      else if (a === user && open) { if (open >= since90) waits.push(Date.parse(at) - Date.parse(open)); open = null; }
+    }
+  }
+  waits.sort((x, y) => x - y);
+  const med = waits.length ? waits[Math.floor(waits.length / 2)] / 3600000 : null;
+  const medLabel = med == null ? null : med < 1 ? `${Math.max(1, Math.round(med * 60))} min` : med < 24 ? `${Math.round(med)} h` : `${(med / 24).toFixed(med < 240 ? 1 : 0)} days`;
+  return { asks, theirMove, opened: opened.length, inAreas, last, pings90, replies: waits.length, medLabel };
+}
+function personHtml(login, now) {
+  const s = personStats(login, now);
+  const isMe = lc(login) === state.user;
+  const list = s.asks.slice(0, 4).map((r) => {
+    const over = (now - Date.parse(r.since)) / DAY > OVERDUE_DAYS;
+    return `<a class="pc-ask" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}"><span class="pc-dot"></span><span class="pc-t"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}</span><span class="pc-age ${over ? 'over' : ''}">${humanAge(r.since, now)}</span></a>`;
+  }).join('');
+  return `
+    <div class="hc-top">
+      <div class="hc-who">${avatar(login, 40)}<div style="min-width:0"><div class="hc-name">@${esc(login)}${isMe ? ' <span class="pc-you">you</span>' : ''}</div>
+        <div class="hc-verb">${s.last ? `active ${humanAge(s.last, now)} ago in ${esc(data.repo.split(' ')[0])}` : 'no recent activity'}</div></div>
+        <a class="pc-gh" href="https://github.com/${encodeURIComponent(login)}" target="_blank" rel="noopener">GitHub ↗</a></div>
+      <div class="pc-tiles">
+        <div class="${s.asks.length ? 'hot' : ''}"><b>${s.asks.length}</b><span>waiting on you</span></div>
+        <div><b>${s.theirMove}</b><span>waiting on them</span></div>
+        <div><b>${s.opened}</b><span>open by them${s.inAreas && !state.areas.includes('all') ? ` · ${s.inAreas} in your areas` : ''}</span></div>
+      </div>
+    </div>
+    <div class="hc-body">
+      ${list ? `<div class="pc-list"><div class="pc-h">Their asks to you</div>${list}${s.asks.length > 4 ? `<div class="pc-more">+${s.asks.length - 4} more</div>` : ''}</div>` : isMe ? '' : '<div class="hc-tip">Nothing from them is waiting on you. 👍</div>'}
+      ${!isMe && (s.replies || s.pings90) ? `<div class="pc-meta">${s.pings90 ? `<span>pinged you <b>${s.pings90}×</b> in 90 days</span>` : ''}${s.medLabel ? `<span>you usually answer in <b>${s.medLabel}</b></span>` : ''}</div>` : ''}
+      <button class="pm-btn" data-filter-person="${esc(login)}">Show everything with @${esc(login)} on the board →</button>
+    </div>`;
+}
+function showPerson(el) {
+  clearTimeout(pcTimer); clearTimeout(pcHide);
+  if (pcFor === el && !pcard.hidden) return;
+  pcTimer = setTimeout(() => {
+    pcFor = el;
+    pcard.innerHTML = personHtml(el.dataset.person, Date.now());
+    pcard.hidden = false;
+    placeAt(pcard, el);
+  }, 250);
+}
+function placeAt(card, anchor) {
+  const a = anchor.getBoundingClientRect(), c = card.getBoundingClientRect(), gap = 8;
+  const left = Math.min(Math.max(12, a.left), innerWidth - c.width - 12);
+  let top = a.bottom + gap;
+  if (top + c.height > innerHeight - 12) top = Math.max(12, a.top - c.height - gap);
+  card.style.left = `${left}px`; card.style.top = `${top}px`;
+}
+function hidePerson(delay = 160) {
+  clearTimeout(pcTimer); clearTimeout(pcHide);
+  pcHide = setTimeout(() => { pcard.hidden = true; pcFor = null; }, delay);
+}
+function filterByPerson(login) {
+  pcard.hidden = true; pcFor = null;
+  state.query = `@${login}`; state.filter = null; state.sel = 0; state.limit = 40;
+  const hasAsks = rows.some((r) => r.bucket === 'reply' && lc(r.who) === lc(login));
+  if (hasAsks) state.tab = 'reply';
+  syncUrl(); render();
+  $('#board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.addEventListener('mouseover', (e) => {
+  const p = e.target.closest('[data-person]');
+  if (p) { showPerson(p); return; }
+  if (e.target.closest('#pcard')) { clearTimeout(pcHide); return; }
+  if (pcFor || !pcard.hidden) hidePerson();
+  else clearTimeout(pcTimer);
+});
+document.addEventListener('click', (e) => {
+  const f = e.target.closest('[data-filter-person]');
+  if (f) { filterByPerson(f.dataset.filterPerson); return; }
+  const p = e.target.closest('[data-person]');
+  if (p) { e.preventDefault(); e.stopPropagation(); filterByPerson(p.dataset.person); }
+}, true);
+addEventListener('scroll', () => { if (!pcard.hidden) hidePerson(0); }, { passive: true });
 
 // ---------------- pulse popup ----------------
 const pulseDlg = $('#pulse-dlg');
