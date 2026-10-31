@@ -109,6 +109,7 @@
   .stat.warn b { color: var(--overdue); }
   .stat svg { display: block; margin-top: 4px; }
 
+  .summary .nudge { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; padding: 10px 12px; border: 1px dashed var(--line-2); border-radius: 8px; }
   .summary h3 { font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
   .summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
   .summary li button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 7px 8px; cursor: pointer; }
@@ -166,9 +167,43 @@
   .tab { flex: none; display: flex; align-items: baseline; gap: 8px; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; color: var(--ink-2); }
   .tab b { font: 600 17px var(--font-mono); color: var(--ink); }
   .tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); }
+  .tab.off { border-style: dashed; color: var(--ink-3); }
+  .tab.off b { color: var(--ink-3); }
   .board-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 12px 0 10px; font-size: 12px; color: var(--ink-3); }
   .board-tools .spacer { flex: 1; }
-  .board-tools input[type=search] { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; width: 240px; font-size: 13px; }
+  .search { position: relative; display: flex; align-items: center; width: 270px; }
+  .search svg { position: absolute; left: 10px; color: var(--ink-3); pointer-events: none; }
+  .search input { width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 30px 7px 32px; font-size: 13px; outline: none; transition: border-color .12s, box-shadow .12s; }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search kbd { position: absolute; right: 8px; pointer-events: none; }
+  .search input:focus + kbd, .search input:not(:placeholder-shown) + kbd { display: none; }
+
+  .dd { position: relative; }
+  .dd-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px 6px 12px; font-size: 13px; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+  .dd-btn:hover, .dd-btn[aria-expanded="true"] { border-color: var(--accent); }
+  .dd-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .dd-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .dd-btn svg { color: var(--ink-3); transition: transform .15s; }
+  .dd-k { color: var(--ink-3); font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  .dd-v { color: var(--ink); font-weight: 600; }
+  .dd-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 290px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; padding: 5px; box-shadow: 0 14px 34px rgba(16, 24, 40, .16), 0 2px 6px rgba(16, 24, 40, .06); outline: none; }
+  .dd-opt { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  .dd-opt.active { background: var(--panel-2); }
+  .dd-l { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .dd-h { display: block; font-size: 12px; color: var(--ink-3); }
+  .dd-opt[aria-selected="true"] .dd-l { color: var(--accent); }
+  .dd-c { color: var(--accent); width: 14px; flex: none; display: grid; place-items: center; }
+  @media (prefers-reduced-motion: no-preference) { .dd-menu:not([hidden]) { animation: dd-in .12s ease-out; } }
+  @keyframes dd-in { from { opacity: 0; transform: translateY(-4px); } }
+
+  .sw { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); user-select: none; }
+  .sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .sw-track { position: relative; width: 32px; height: 18px; border-radius: 9px; background: var(--line-2); transition: background .15s; flex: none; }
+  .sw-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--panel); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
+  .sw input:checked + .sw-track { background: var(--accent); }
+  .sw input:checked + .sw-track::after { transform: translateX(14px); }
+  .sw input:focus-visible + .sw-track { outline: 2px solid var(--accent); outline-offset: 2px; }
   .board-tools label { display: inline-flex; gap: 6px; align-items: center; }
   .board-tools select { font: 13px var(--font-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 5px 8px; }
   .filter-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--accent); color: var(--ink); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12px; }
@@ -231,7 +266,7 @@
     .axis { display: none; }
     .lane { grid-template-columns: minmax(0, 1fr) 56px; }
     .lane .track { grid-column: 1 / -1; grid-row: 2; }
-    .board-tools input[type=search] { width: 100%; }
+    .search { width: 100%; }
     .board-tools .keys { display: none; }
   }
 </style>
@@ -310,6 +345,9 @@ const TABS = {
   activity: 'Replied after you', waiting: 'Their move', backlog: 'Backlog',
 };
 const ORDER = Object.keys(TABS);
+const AREA_TABS = ['fresh', 'activity', 'waiting', 'backlog'];
+const noAreas = () => !state.areas.length;
+const NO_AREA_MSG = 'This tab shows items in the areas you watch. Pick at least one area in the Watching bar at the top.';
 const ACTION = {
   changes:  { label: 'Re-review', verb: 'wants a re-review', c: 'rereview' },
   review:   { label: 'Review', verb: 'asked for your review', c: 'review' },
@@ -324,10 +362,10 @@ const lastEventAt = (i) => (i.ev.length ? i.ev[i.ev.length - 1][0] : i.created);
 // The time a strip shows: when they asked (waiting/your items) or the latest activity (everything else).
 const refTime = (r) => (r.bucket === 'reply' || r.bucket === 'mine' ? r.since : r.last);
 const SORTS = {
-  newest:   { label: 'Newest first', cmp: (a, b) => (refTime(b) > refTime(a) ? 1 : refTime(b) < refTime(a) ? -1 : 0) },
-  oldest:   { label: 'Oldest first', cmp: (a, b) => (refTime(a) > refTime(b) ? 1 : refTime(a) < refTime(b) ? -1 : 0) },
-  active:   { label: 'Most active', cmp: (a, b) => b.item.ev.length - a.item.ev.length },
-  number:   { label: 'Issue number', cmp: (a, b) => b.item.n - a.item.n },
+  newest:   { label: 'Newest first', hint: 'Latest ask or activity on top', cmp: (a, b) => (refTime(b) > refTime(a) ? 1 : refTime(b) < refTime(a) ? -1 : 0) },
+  oldest:   { label: 'Oldest first', hint: 'Longest waiting on top', cmp: (a, b) => (refTime(a) > refTime(b) ? 1 : refTime(a) < refTime(b) ? -1 : 0) },
+  active:   { label: 'Most active', hint: 'Most comments, reviews and pushes', cmp: (a, b) => b.item.ev.length - a.item.ev.length },
+  number:   { label: 'Issue number', hint: 'Highest number first', cmp: (a, b) => b.item.n - a.item.n },
 };
 
 function analyse(item, bucket, user) {
@@ -564,6 +602,52 @@ function sparkline(pts) {
   return `<svg width="${W + 4}" height="${H}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${css('--accent')}" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${css('--accent')}"/></svg>`;
 }
 
+// ---------------- sort dropdown (custom listbox) ----------------
+const CHEVRON = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHECK = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.5l2.6 2.5L11 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function dropdown() {
+  const cur = SORTS[state.sort] || SORTS.newest;
+  return `<div class="dd" id="sort-dd">
+    <button type="button" class="dd-btn" id="sort-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="sort-menu">
+      <span class="dd-k">Sort</span><span class="dd-v">${esc(cur.label)}</span>${CHEVRON}</button>
+    <div class="dd-menu" id="sort-menu" role="listbox" aria-label="Sort the board" tabindex="-1" hidden>
+      ${Object.entries(SORTS).map(([k, v]) => `<div class="dd-opt" role="option" id="sort-opt-${k}" data-v="${k}" aria-selected="${state.sort === k}">
+        <span><span class="dd-l">${esc(v.label)}</span><span class="dd-h">${esc(v.hint)}</span></span><span class="dd-c">${state.sort === k ? CHECK : ''}</span></div>`).join('')}
+    </div></div>`;
+}
+let closeOpenDropdown = null;
+function wireDropdown(onPick) {
+  const btn = $('#sort-btn'), menu = $('#sort-menu');
+  const opts = [...menu.querySelectorAll('.dd-opt')];
+  let active = Math.max(0, opts.findIndex((o) => o.dataset.v === state.sort));
+  const paint = () => { opts.forEach((o, i) => o.classList.toggle('active', i === active)); menu.setAttribute('aria-activedescendant', opts[active].id); };
+  const open = () => { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); active = Math.max(0, opts.findIndex((o) => o.dataset.v === state.sort)); paint(); menu.focus(); closeOpenDropdown = close; };
+  const close = (refocus = true) => { if (menu.hidden) return; menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); closeOpenDropdown = null; if (refocus) btn.focus(); };
+  const pick = (i) => {
+    const v = opts[i].dataset.v;
+    close();
+    if (v === state.sort) return;
+    opts.forEach((o) => { const on = o.dataset.v === v; o.setAttribute('aria-selected', on); o.querySelector('.dd-c').innerHTML = on ? CHECK : ''; });
+    btn.querySelector('.dd-v').textContent = SORTS[v].label;
+    onPick(v);
+  };
+  btn.onclick = () => (menu.hidden ? open() : close());
+  btn.onkeydown = (e) => { if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); open(); } };
+  menu.onkeydown = (e) => {
+    if (e.key === 'ArrowDown') { active = (active + 1) % opts.length; paint(); }
+    else if (e.key === 'ArrowUp') { active = (active - 1 + opts.length) % opts.length; paint(); }
+    else if (e.key === 'Home') { active = 0; paint(); }
+    else if (e.key === 'End') { active = opts.length - 1; paint(); }
+    else if (e.key === 'Enter' || e.key === ' ') pick(active);
+    else if (e.key === 'Escape') close();
+    else if (e.key === 'Tab') { close(false); return; }
+    else return;
+    e.preventDefault(); e.stopPropagation();
+  };
+  opts.forEach((o, i) => { o.onmousemove = () => { if (active !== i) { active = i; paint(); } }; o.onclick = () => pick(i); });
+}
+document.addEventListener('mousedown', (e) => { if (closeOpenDropdown && !e.target.closest('.dd')) closeOpenDropdown(false); });
+
 // ---------------- render ----------------
 function render() {
   if (!data) return;
@@ -610,7 +694,7 @@ function renderInner() {
           </div>
         </div>
         <div class="summary">
-          <h3>In ${esc(areaName)} · ${total} open</h3>
+          <h3>${noAreas() ? 'Your areas' : `In ${esc(areaName)} · ${total} open`}</h3>${noAreas() ? '<p class="nudge">Pick the areas you look after in the <b>Watching</b> bar at the top to see what needs attention there.</p>' : ''}
           <ul>${facts.map((f) => `<li><button data-fact="${f.key}" style="--c:var(--${f.c})"><span>${esc(f.label)}</span><b>${f.n}</b><span class="bar-mini"><i style="width:${(f.n / fmax) * 100}%"></i></span></button></li>`).join('')}</ul>
         </div>
       </div>
@@ -618,11 +702,15 @@ function renderInner() {
     </section>
 
     <div class="section-h" id="board"><h2>Board</h2><p>Everything in your scope, one strip per item.</p></div>
-    <div class="tabs" role="tablist">${ORDER.map((k) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter}">${TABS[k]}<b>${live.filter((r) => r.bucket === k).length}</b></button>`).join('')}</div>
+    <div class="tabs" role="tablist">${ORDER.map((k) => {
+      const off = noAreas() && AREA_TABS.includes(k);
+      return `<button class="tab ${off ? 'off' : ''}" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter}" ${off ? `title="${esc(NO_AREA_MSG)}"` : ''}>${TABS[k]}<b>${off ? '–' : live.filter((r) => r.bucket === k).length}</b></button>`;
+    }).join('')}</div>
     <div class="board-tools">${state.filter ? `<span class="filter-chip">${esc(facts.find((f) => f.key === state.filter).label)}<button id="clear-filter" aria-label="Clear filter">×</button></span>` : ''}
-      <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}">
-      <label for="sort">sort <select id="sort">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${state.sort === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></label>
-      <label><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}> show done</label><span class="spacer"></span>
+      <div class="search"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}" aria-label="Filter the board"><kbd aria-hidden="true">/</kbd></div>
+      ${dropdown()}
+      <label class="sw"><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}><span class="sw-track" aria-hidden="true"></span>show done</label><span class="spacer"></span>
       <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>d</kbd> done</span></div>
     <ul class="strips" id="strips"></ul>
 
@@ -646,11 +734,11 @@ function renderInner() {
   main.querySelectorAll('[data-lanes]').forEach((b) => (b.onclick = () => { state.lanesMode = b.dataset.lanes; state.laneLimit = 7; store.set('radar:lanes', state.lanesMode); render(); }));
   $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
   $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now, facts); };
-  $('#sort').onchange = (e) => {
-    state.sort = e.target.value; state.sel = 0; store.set('radar:sort', state.sort);
+  wireDropdown((value) => {
+    state.sort = value; state.sel = 0; store.set('radar:sort', state.sort);
     const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
     renderBoard(now, facts);
-  };
+  });
   renderBoard(now, facts);
   pulse($('#pulse'), now);
 }
@@ -668,7 +756,10 @@ function renderBoard(now, facts) {
   if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
   boardRows = [...boardRows].sort(SORTS[state.sort]?.cmp || SORTS.newest.cmp);
   const ul = $('#strips');
-  if (!boardRows.length) { ul.innerHTML = `<li class="empty-board">${state.tab === 'reply' && !state.filter ? 'Nobody is waiting on you.' : 'Nothing here.'}</li>`; return; }
+  if (!boardRows.length) {
+    const msg = !state.filter && noAreas() && AREA_TABS.includes(state.tab) ? NO_AREA_MSG : state.tab === 'reply' && !state.filter ? 'Nobody is waiting on you.' : 'Nothing here.';
+    ul.innerHTML = `<li class="empty-board">${esc(msg)}</li>`; return;
+  }
   state.sel = Math.min(state.sel, boardRows.length - 1);
   ul.innerHTML = boardRows.slice(0, state.limit).map((r, i) => {
     const it = r.item, a = ACTION[r.action];
@@ -693,7 +784,8 @@ function renderBoard(now, facts) {
 }
 
 addEventListener('keydown', (e) => {
-  if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey || !boardRows.length) return;
+  if (e.key === '/' && !e.target.matches('input, textarea')) { e.preventDefault(); $('#q')?.focus(); return; }
+  if (e.target.matches('input, textarea') || e.target.closest?.('.dd') || e.metaKey || e.ctrlKey || e.altKey || !boardRows.length) return;
   const vis = Math.min(boardRows.length, state.limit);
   if (e.key === 'j' || e.key === 'k') {
     state.sel = Math.max(0, Math.min(vis - 1, state.sel + (e.key === 'j' ? 1 : -1)));
