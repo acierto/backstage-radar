@@ -1,0 +1,66 @@
+name: Pick runner
+
+# Reusable: chooses the self-hosted Oracle runner when it is online, otherwise
+# falls back to a GitHub-hosted runner (free for public repos) so scheduled
+# jobs never sit in the queue. Also keeps a single "runner offline" issue open
+# while the self-hosted runner is down, and closes it when it comes back.
+#
+# Listing self-hosted runners needs a token with "Administration: Read" on this
+# repo (fine-grained PAT) in the RUNNER_STATUS_TOKEN secret. Without it the
+# self-hosted runner is assumed online.
+
+on:
+  workflow_call:
+    outputs:
+      runner:
+        description: JSON value for runs-on
+        value: ${{ jobs.pick.outputs.runner }}
+    secrets:
+      RUNNER_STATUS_TOKEN:
+        required: false
+
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      runner: ${{ steps.pick.outputs.runner }}
+    steps:
+      - id: pick
+        env:
+          STATUS_TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SELF_HOSTED: '["self-hosted","linux","ARM64","oracle"]'
+          HOSTED: '"ubuntu-latest"'
+          LABEL: runner-offline
+        run: |
+          status=unknown
+          if [ -n "$STATUS_TOKEN" ]; then
+            status=$(GH_TOKEN="$STATUS_TOKEN" gh api "repos/$GH_REPO/actions/runners" --jq '
+              [.runners[] | select(.labels | map(.name) | index("oracle")) | .status]
+              | if index("online") then "online" elif length == 0 then "missing" else "offline" end' 2>&1) \
+              || status="api-error: ${status//$'\n'/ }"
+          fi
+          echo "self-hosted runner status: $status"
+
+          if [ "$status" = online ] || [ "$status" = unknown ]; then
+            echo "runner=$SELF_HOSTED" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Self-hosted runner is $status, falling back to GitHub-hosted"
+            echo "runner=$HOSTED" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Alert issue bookkeeping (best effort, never fails the run).
+          [ "$status" = unknown ] && exit 0
+          open=$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ "$status" = online ]; then
+            [ -n "$open" ] && gh issue close "$open" --comment "Runner is back online (run $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID)." || true
+          elif [ -z "$open" ]; then
+            gh label create "$LABEL" --color B60205 --description "Self-hosted runner is down" --force >/dev/null 2>&1 || true
+            gh issue create --label "$LABEL" --assignee "$GITHUB_REPOSITORY_OWNER" \
+              --title "Self-hosted runner agents-runner is offline" \
+              --body "Status: \`$status\`. Jobs are falling back to GitHub-hosted runners until it recovers; this issue closes automatically.
+
+          Check on the VM: \`ssh ubuntu@158.101.198.99 'sudo systemctl status actions.runner.*'\`, or re-run \`scripts/setup-oracle-runner.sh\`." || true
+          fi

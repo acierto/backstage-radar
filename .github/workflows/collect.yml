@@ -7,10 +7,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['site/**', 'src/**', 'config.yml', '.github/workflows/collect.yml']
+    paths: ['site/**', 'src/**', 'config.yml', '.github/workflows/collect.yml', '.github/workflows/pick-runner.yml']
 
 permissions:
   contents: read
+  issues: write  # runner-offline alert issue
   pages: write
   id-token: write
 
@@ -19,8 +20,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  pick:
+    uses: ./.github/workflows/pick-runner.yml
+    secrets: inherit
+
   collect:
-    runs-on: [self-hosted, linux, ARM64, oracle]
+    needs: pick
+    runs-on: ${{ fromJSON(needs.pick.outputs.runner) }}
     timeout-minutes: 20
     environment:
       name: github-pages

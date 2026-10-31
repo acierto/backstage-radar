@@ -15,8 +15,13 @@ permissions:
   issues: write
 
 jobs:
+  pick:
+    uses: ./.github/workflows/pick-runner.yml
+    secrets: inherit
+
   digest:
-    runs-on: [self-hosted, linux, ARM64, oracle]
+    needs: pick
+    runs-on: ${{ fromJSON(needs.pick.outputs.runner) }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
