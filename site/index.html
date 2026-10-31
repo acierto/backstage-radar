@@ -136,17 +136,22 @@
   .axis .ticks { position: relative; height: 14px; }
   .axis .ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
   .axis .ticks span:last-child { transform: translateX(-100%); }
+  .axis .ticks { margin-left: 9px; }
+  .axis .ticks span:first-child { transform: none; }
   .lane { text-decoration: none; padding: 8px 0; border-top: 1px solid var(--line); }
   .lane:hover .who-name { color: var(--accent); }
   .lane .id { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; min-width: 0; }
   .lane img, .lane .ph { width: 34px; height: 34px; border-radius: 50%; }
-  .who-name { font-weight: 600; font-size: 14px; }
+  .lane .id > div > div:first-child { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
+  .who-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .who-act { flex: none; }
   .who-act { font: 600 11px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--c-ink); margin-left: 6px; }
   .lane .ttl { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .lane .ttl .n { font-family: var(--font-mono); color: var(--ink-3); }
   .track { position: relative; height: 22px; background: linear-gradient(var(--track), var(--track)) center / 100% 2px no-repeat; }
   .track .grid { position: absolute; top: 2px; bottom: 2px; width: 1px; background: var(--line); }
   .track .span { position: absolute; top: 5px; height: 12px; border-radius: 6px; background: var(--c); opacity: .9; }
+  .track { margin-left: 9px; }
   .track .start { position: absolute; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--panel); border: 3px solid var(--c); transform: translateX(-50%); }
   .lane .age { text-align: right; font: 600 16px var(--font-mono); }
   .lane .age small { display: block; font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
@@ -365,8 +370,9 @@ const SORTS = {
   newest:   { label: 'Newest first', hint: 'Latest ask or activity on top', cmp: (a, b) => (refTime(b) > refTime(a) ? 1 : refTime(b) < refTime(a) ? -1 : 0) },
   oldest:   { label: 'Oldest first', hint: 'Longest waiting on top', cmp: (a, b) => (refTime(a) > refTime(b) ? 1 : refTime(a) < refTime(b) ? -1 : 0) },
   active:   { label: 'Most active', hint: 'Most comments, reviews and pushes', cmp: (a, b) => b.item.ev.length - a.item.ev.length },
-  number:   { label: 'Issue number', hint: 'Highest number first', cmp: (a, b) => b.item.n - a.item.n },
 };
+// A sort that no longer exists (e.g. a saved "Issue number") falls back to newest first.
+if (!SORTS[state.sort]) state.sort = 'newest';
 
 function analyse(item, bucket, user) {
   let myReview = null, pushAfter = false, pingKind = null, pinger = null, lastOther = null;
@@ -472,9 +478,18 @@ function renderAreas() {
 
 // ---------------- waiting lanes ----------------
 // Shared time axis, log-scaled so a 2-hour ping and a 10-week ping are both readable. Right edge = now.
-const AXIS_DAYS = 120;
-const xPos = (days) => 100 * (1 - Math.log1p(Math.max(0, days)) / Math.log1p(AXIS_DAYS));
-const TICKS = [[AXIS_DAYS, '4 months'], [28, '4w'], [7, '1w'], [1, '1d'], [0, 'now']];
+// The axis stretches to cover the oldest lane on screen (at least 4 months), so no bar leaves its track.
+const TICK_SET = [[365 * 4, '4y'], [365 * 2, '2y'], [365, '1y'], [120, '4m'], [28, '4w'], [7, '1w'], [1, '1d']];
+let axisDays = 120;
+const xPos = (days) => Math.max(0, Math.min(100, 100 * (1 - Math.log1p(Math.max(0, days)) / Math.log1p(axisDays))));
+function setAxis(maxDays) {
+  axisDays = TICK_SET.map(([d]) => d).reverse().find((d) => d >= maxDays) || Math.ceil(maxDays);
+  axisDays = Math.max(120, axisDays);
+  const ticks = TICK_SET.filter(([d]) => d < axisDays && d >= 1);
+  const edge = TICK_SET.find(([d]) => d === axisDays)?.[1] || `${Math.round(axisDays / 365)}y`;
+  // drop ticks that would sit too close to the left edge label
+  return [[axisDays, edge], ...ticks.filter(([d]) => xPos(d) > 8), [0, 'now']];
+}
 
 function lanes(now) {
   const forMe = rows.filter((r) => r.bucket === 'reply' && !r.done);
@@ -490,6 +505,7 @@ function lanes(now) {
   }
   const kinds = ['question', 'changes', 'review', 'reply', 'newpr', 'newissue'].filter((k) => waiting.some((r) => r.action === k));
   const shown = waiting.slice(0, state.laneLimit);
+  const TICKS = setAxis(Math.max(...shown.map((r) => (now - Date.parse(r.since)) / DAY)));
   const grid = TICKS.slice(1, -1).map(([d]) => `<span class="grid" style="left:${xPos(d)}%"></span>`).join('');
   const lane = (r) => {
     const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = mode === 'me' && days > OVERDUE_DAYS;
