@@ -9,19 +9,19 @@ on:
       only:
         description: 'Send only to this GitHub login (for testing)'
         required: false
+      runner:
+        description: 'Where to run (runner-watchdog sets "hosted" when the Oracle runner is down)'
+        type: choice
+        options: [self-hosted, hosted]
+        default: self-hosted
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  pick:
-    uses: ./.github/workflows/pick-runner.yml
-    secrets: inherit
-
   digest:
-    needs: pick
-    runs-on: ${{ fromJSON(needs.pick.outputs.runner) }}
+    runs-on: ${{ inputs.runner == 'hosted' && 'ubuntu-latest' || fromJSON('["self-hosted","linux","ARM64","oracle"]') }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
