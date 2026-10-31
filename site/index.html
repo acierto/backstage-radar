@@ -259,6 +259,34 @@
   .ramp { display: inline-flex; gap: 2px; vertical-align: middle; margin: 0 6px; }
   .ramp i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
+  /* hover card: tinted with the color of the ask */
+  .hcard { position: fixed; z-index: 40; width: 360px; max-width: calc(100vw - 24px); pointer-events: none; background: var(--panel); border: 1px solid color-mix(in srgb, var(--c) 35%, var(--line-2)); border-radius: 14px; overflow: hidden; box-shadow: 0 18px 44px color-mix(in srgb, var(--c) 22%, rgba(10,14,20,.18)), 0 2px 8px rgba(10,14,20,.08); }
+  .hcard .hc-top { position: relative; padding: 14px 16px 12px; background: linear-gradient(135deg, color-mix(in srgb, var(--c) 22%, var(--panel)), color-mix(in srgb, var(--c) 6%, var(--panel)) 70%); }
+  .hcard .hc-top::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 40%, var(--accent))); }
+  .hcard .hc-who { display: flex; align-items: center; gap: 10px; }
+  .hcard .hc-who img, .hcard .hc-who .ph { width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px color-mix(in srgb, var(--c) 55%, transparent); }
+  .hcard .hc-name { font-weight: 700; font-size: 14px; }
+  .hcard .hc-verb { font-size: 12px; color: var(--ink-2); }
+  .hcard .hc-pill { margin-left: auto; flex: none; font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--c-ink); background: color-mix(in srgb, var(--c) 18%, var(--panel)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); border-radius: 999px; padding: 2px 8px; }
+  .hcard .hc-title { margin: 12px 0 0; font: 700 16px/1.3 var(--font-display); letter-spacing: -0.005em; text-wrap: pretty; }
+  .hcard .hc-title .n { font: 500 13px var(--font-mono); color: var(--ink-3); margin-right: 4px; }
+  .hcard .hc-body { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .hcard .hc-facts { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 12.5px; }
+  .hcard .hc-facts dt { color: var(--ink-3); font: 600 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding-top: 2px; }
+  .hcard .hc-facts dd { margin: 0; color: var(--ink); }
+  .hcard .hc-facts dd b { font-weight: 600; }
+  .hcard .hc-wait { color: var(--c-ink); font-weight: 700; }
+  .hcard .hc-wait.over { color: var(--overdue); }
+  .hcard .hc-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .hcard .hc-tags span { font: 11px var(--font-mono); padding: 1px 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-2); }
+  .hcard .hc-tags span.kind { background: color-mix(in srgb, var(--c) 12%, var(--panel)); border-color: color-mix(in srgb, var(--c) 35%, transparent); color: var(--c-ink); }
+  .hcard .hc-people { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line-2); font-size: 12px; color: var(--ink-2); }
+  .hcard .hc-faces { display: flex; }
+  .hcard .hc-faces img, .hcard .hc-faces .ph { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--panel); margin-left: -6px; font-size: 8px; }
+  .hcard .hc-faces > :first-child { margin-left: 0; }
+  .hcard .hc-open { margin-left: auto; color: var(--accent); font-weight: 600; }
+  @media (prefers-reduced-motion: no-preference) { .hcard:not([hidden]) { animation: hc-in .14s ease-out; } }
+  @keyframes hc-in { from { opacity: 0; transform: translateY(4px) scale(.985); } }
   .tip { position: fixed; z-index: 30; pointer-events: none; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
   .tip b { display: block; font-size: 13px; margin-bottom: 2px; }
   .tip .k { color: var(--ink-3); font-family: var(--font-mono); }
@@ -323,6 +351,7 @@
   <div class="pulse" id="pulse"></div>
 </dialog>
 <div class="tip" id="tip" hidden></div>
+<div class="hcard" id="hcard" role="tooltip" hidden></div>
 
 <script type="module">
 import { classify, humanAge, itemAreas, DAY } from './logic.js';
@@ -520,7 +549,7 @@ function lanes(now) {
   const lane = (r) => {
     const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = mode === 'me' && days > OVERDUE_DAYS;
     const left = xPos(days);
-    return `<a class="lane" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}">
+    return `<a class="lane" data-n="${r.item.n}" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}">
       <div class="id">${avatar(r.who, 34)}<div style="min-width:0"><div><span class="who-name">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
         <div class="ttl"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}</div></div></div>
       <div class="track">${grid}<span class="span" style="left:${left}%;right:0"></span><span class="start" style="left:${left}%"></span></div>
@@ -693,6 +722,7 @@ function render() {
 }
 
 function renderInner() {
+  hideCard();
   renderAreas();
   const now = Date.now();
   const main = $('#main');
@@ -799,7 +829,7 @@ function renderBoard(now, facts) {
     const days = (now - Date.parse(ref)) / DAY;
     const over = days > OVERDUE_DAYS && (r.bucket === 'reply' || r.bucket === 'mine');
     const isNew = Date.parse(r.last) > cut && r.bucket !== 'waiting';
-    return `<li class="strip ${r.done ? 'done' : ''} ${i === state.sel ? 'sel' : ''}" data-i="${i}" style="${colorVars(r.action)}">
+    return `<li class="strip ${r.done ? 'done' : ''} ${i === state.sel ? 'sel' : ''}" data-i="${i}" data-n="${it.n}" style="${colorVars(r.action)}">
       <span class="edge"></span>
       <div class="cs"><b>#${it.n}</b><small>${it.t === 'pr' ? (it.draft ? 'draft pr' : 'pr') : 'issue'}</small></div>
       <div class="st"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
@@ -820,9 +850,72 @@ addEventListener('keydown', (e) => {
   if (e.key === 'j' || e.key === 'k') {
     state.sel = Math.max(0, Math.min(vis - 1, state.sel + (e.key === 'j' ? 1 : -1)));
     document.querySelectorAll('#strips .strip').forEach((li) => li.classList.toggle('sel', +li.dataset.i === state.sel));
-    document.querySelector(`#strips .strip[data-i="${state.sel}"]`)?.scrollIntoView({ block: 'nearest' });
+    const sel = document.querySelector(`#strips .strip[data-i="${state.sel}"]`);
+    sel?.scrollIntoView({ block: 'nearest' });
+    if (sel) showCard(sel, sel.querySelector('.st'), 0);
   } else if (e.key === 'o') document.querySelector(`#strips .strip[data-i="${state.sel}"] .st a`)?.click();
 });
+
+// ---------------- hover card ----------------
+const hcard = $('#hcard');
+let hcTimer = null, hcFor = null;
+function cardHtml(r, now) {
+  const it = r.item, a = ACTION[r.action];
+  const talk = it.ev.filter((e) => e[2] === 'c' || e[2] === 'r' || e[2] === 'rc').length;
+  const people = [...new Set(it.ev.filter((e) => e[2] !== 'rr').map((e) => e[1]))];
+  const ref = r.bucket === 'reply' || r.bucket === 'mine' ? r.since : r.last;
+  const waitDays = (now - Date.parse(ref)) / DAY;
+  const over = (r.bucket === 'reply' || r.bucket === 'mine') && waitDays > OVERDUE_DAYS;
+  const waitLabel = r.bucket === 'reply' ? 'Waiting' : r.bucket === 'mine' ? 'Reply came' : 'Last activity';
+  const kind = it.t === 'pr' ? (it.draft ? 'Draft PR' : 'Pull request') : 'Issue';
+  return `
+    <div class="hc-top">
+      <div class="hc-who">${avatar(r.who, 36)}<div><div class="hc-name">@${esc(r.who)}</div><div class="hc-verb">${esc(a.verb)}</div></div><span class="hc-pill">${esc(a.label)}</span></div>
+      <p class="hc-title"><span class="n">#${it.n}</span>${esc(it.title)}</p>
+    </div>
+    <div class="hc-body">
+      <dl class="hc-facts">
+        <dt>${esc(waitLabel)}</dt><dd><span class="hc-wait ${over ? 'over' : ''}">${humanAge(ref, now)}${r.bucket === 'reply' || r.bucket === 'mine' ? '' : ' ago'}</span>${over ? ' · overdue' : ''}</dd>
+        <dt>Opened</dt><dd>${humanAge(it.created, now)} ago by <b>@${esc(it.author)}</b></dd>
+        <dt>You</dt><dd>${r.myLast ? `last replied ${humanAge(r.myLast, now)} ago` : 'not involved yet'}</dd>
+      </dl>
+      <div class="hc-tags"><span class="kind">${kind}</span>${itemAreas(it).map((x) => `<span>${esc(x)}</span>`).join('')}</div>
+      <div class="hc-people"><span class="hc-faces">${people.slice(0, 6).map((p) => avatar(p, 22)).join('')}</span>
+        <span>${talk} ${talk === 1 ? 'reply' : 'replies'} · ${people.length} ${people.length === 1 ? 'person' : 'people'}</span><span class="hc-open">Open ↗</span></div>
+    </div>`;
+}
+function placeCard(anchor) {
+  const a = anchor.getBoundingClientRect(), c = hcard.getBoundingClientRect(), gap = 10;
+  let left = Math.min(Math.max(12, a.left), innerWidth - c.width - 12);
+  let top = a.bottom + gap;
+  if (top + c.height > innerHeight - 12) top = Math.max(12, a.top - c.height - gap);
+  hcard.style.left = `${left}px`; hcard.style.top = `${top}px`;
+}
+function showCard(el, anchor, delay = 280) {
+  clearTimeout(hcTimer);
+  const n = +el.dataset.n;
+  hcTimer = setTimeout(() => {
+    const r = rows.find((x) => x.item.n === n);
+    if (!r) return;
+    hcFor = el;
+    hcard.setAttribute('style', colorVars(r.action));
+    hcard.innerHTML = cardHtml(r, Date.now());
+    hcard.hidden = false;
+    placeCard(anchor);
+  }, delay);
+}
+function hideCard() { clearTimeout(hcTimer); hcard.hidden = true; hcFor = null; }
+document.addEventListener('mouseover', (e) => {
+  const lane = e.target.closest('.lane[data-n]');
+  const strip = !lane && e.target.closest('.strip[data-n] .st');
+  const host = lane || strip?.closest('.strip');
+  if (!host) { if (hcFor && !e.target.closest('.hcard')) hideCard(); return; }
+  if (hcFor === host && !hcard.hidden) return;
+  showCard(host, lane ? lane.querySelector('.id') : strip);
+});
+document.addEventListener('focusin', (e) => { const lane = e.target.closest?.('.lane[data-n]'); if (lane) showCard(lane, lane.querySelector('.id'), 0); });
+document.addEventListener('focusout', (e) => { if (e.target.closest?.('.lane[data-n]')) hideCard(); });
+addEventListener('scroll', hideCard, { passive: true });
 
 // ---------------- pulse popup ----------------
 const pulseDlg = $('#pulse-dlg');
