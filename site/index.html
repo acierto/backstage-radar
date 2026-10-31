@@ -241,8 +241,19 @@
   .empty-board { padding: 26px; text-align: center; color: var(--ink-2); background: var(--panel); border: 1px dashed var(--line-2); border-radius: 10px; }
   .more-btn { margin: 10px auto 0; display: block; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
 
-  /* ---------- pulse ---------- */
-  .pulse { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; overflow-x: auto; }
+  /* ---------- pulse (dialog) ---------- */
+  .icon-lbl { display: inline-flex; align-items: center; gap: 7px; }
+  .icon-only { display: inline-grid; place-items: center; padding: 6px 8px; }
+  #pulse-dlg { border: 1px solid var(--line-2); border-radius: 16px; padding: 20px 22px 18px; background: var(--panel); color: var(--ink); width: min(1000px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-shadow: 0 24px 60px rgba(10, 14, 20, .28); }
+  #pulse-dlg::backdrop { background: rgba(10, 14, 20, .45); backdrop-filter: blur(2px); }
+  @media (prefers-reduced-motion: no-preference) { #pulse-dlg[open] { animation: dlg-in .16s ease-out; } }
+  @keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(.99); } }
+  .dlg-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .dlg-h h2 { margin: 0; font: 800 22px/1.15 var(--font-display); letter-spacing: -0.01em; }
+  .dlg-h p { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; }
+  .dlg-x { flex: none; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel); font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink-2); }
+  .dlg-x:hover { border-color: var(--accent); color: var(--ink); }
+  .pulse { overflow-x: auto; }
   .pulse svg text { font-family: var(--font-mono); }
   .pulse-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; color: var(--ink-2); margin-top: 10px; }
   .ramp { display: inline-flex; gap: 2px; vertical-align: middle; margin: 0 6px; }
@@ -290,9 +301,10 @@
     </div>
     <span class="spacer"></span>
     <span class="fresh" id="fresh">loading…</span>
+    <button class="icon-btn icon-lbl" id="pulse-btn" aria-haspopup="dialog" title="Area pulse: last 4 weeks of activity in your areas"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="6" y="1" width="4" height="4" rx="1" fill="var(--heat-3)"/><rect x="11" y="1" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="1" y="6" width="4" height="4" rx="1" fill="var(--heat-4)"/><rect x="6" y="6" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="11" y="6" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="1" y="11" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="6" y="11" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="11" y="11" width="4" height="4" rx="1" fill="var(--heat-4)"/></svg>Pulse</button>
     <button class="icon-btn" id="refresh" title="Reload the latest scan and hide anything closed since">↻ Refresh</button>
     <a class="icon-btn" id="scan" hidden target="_blank" rel="noopener" title="Open the scan workflow on GitHub and press Run workflow">Scan now ↗</a>
-    <button class="icon-btn" id="share">Copy my link</button>
+    <button class="icon-btn icon-only" id="share" title="Copy a link with your login and areas" aria-label="Copy my link"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.2-1.2a2.8 2.8 0 014 4L11 8.5M9 11.5l-1.2 1.2a2.8 2.8 0 01-4-4L5 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     <button class="icon-btn" id="theme" aria-label="Switch light or dark">◐</button>
   </div>
   <div class="areas-row">
@@ -303,6 +315,13 @@
 </header>
 
 <main class="wrap" id="main"></main>
+<dialog id="pulse-dlg" aria-labelledby="pulse-title">
+  <div class="dlg-h">
+    <div><h2 id="pulse-title">Area pulse</h2><p id="pulse-sub">Last 4 weeks of activity in the areas you watch.</p></div>
+    <button class="dlg-x" id="pulse-close" aria-label="Close">×</button>
+  </div>
+  <div class="pulse" id="pulse"></div>
+</dialog>
 <div class="tip" id="tip" hidden></div>
 
 <script type="module">
@@ -440,9 +459,11 @@ $('#theme').onclick = () => {
   render();
 };
 $('#share').onclick = async () => {
-  try { await navigator.clipboard.writeText(location.href); $('#share').textContent = 'Link copied'; }
-  catch { $('#share').textContent = 'Copy from address bar'; }
-  setTimeout(() => { $('#share').textContent = 'Copy my link'; }, 1600);
+  const b = $('#share'), icon = b.innerHTML;
+  try { await navigator.clipboard.writeText(location.href); b.textContent = '✓ Copied'; }
+  catch { b.textContent = 'Copy the address bar'; }
+  b.classList.remove('icon-only');
+  setTimeout(() => { b.innerHTML = icon; b.classList.add('icon-only'); }, 1600);
 };
 const userEl = $('#user'), teamsEl = $('#teams');
 userEl.value = state.user; teamsEl.value = state.teams.join(', ');
@@ -728,8 +749,6 @@ function renderInner() {
       <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>/</kbd> search</span></div>
     <ul class="strips" id="strips"></ul>
 
-    <div class="section-h"><h2>Area pulse</h2><p>Last 4 weeks of activity in the areas you watch.</p></div>
-    <div class="pulse" id="pulse"></div>
     <footer>Data from <a href="https://github.com/${esc(data.repo.split(' ')[0])}" target="_blank" rel="noopener">${esc(data.repo)}</a>, refreshed every 30 minutes; closed and merged items drop out automatically. Your settings and last visit live in this browser only. <a href="classic.html${esc(location.search)}">Classic view</a></footer>`;
 
   const toBoard = () => $('#board').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -753,7 +772,7 @@ function renderInner() {
     renderBoard(now, facts);
   });
   renderBoard(now, facts);
-  pulse($('#pulse'), now);
+  if ($('#pulse-dlg').open) pulse($('#pulse'), now);
 }
 
 function renderBoard(now, facts) {
@@ -804,6 +823,25 @@ addEventListener('keydown', (e) => {
     document.querySelector(`#strips .strip[data-i="${state.sel}"]`)?.scrollIntoView({ block: 'nearest' });
   } else if (e.key === 'o') document.querySelector(`#strips .strip[data-i="${state.sel}"] .st a`)?.click();
 });
+
+// ---------------- pulse popup ----------------
+const pulseDlg = $('#pulse-dlg');
+function openPulse() {
+  if (!data || !state.user) return;
+  const areas = state.areas.includes('all') ? 'all areas' : state.areas.join(', ');
+  $('#pulse-sub').textContent = state.areas.length ? `Last 4 weeks of activity in ${areas}.` : 'Last 4 weeks of activity in the areas you watch.';
+  pulse($('#pulse'), Date.now());
+  pulseDlg.append(tip); // keep tooltips above the modal layer
+  pulseDlg.showModal();
+}
+$('#pulse-btn').onclick = openPulse;
+$('#pulse-close').onclick = () => pulseDlg.close();
+pulseDlg.addEventListener('click', (e) => { // close on a click outside the dialog box (the backdrop)
+  if (e.target !== pulseDlg) return;
+  const r = pulseDlg.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) pulseDlg.close();
+});
+pulseDlg.addEventListener('close', () => { hideTip(); document.body.append(tip); });
 
 // ---------------- refresh ----------------
 // Scans run on the schedule in collect.yml (minutes 7 and 37 of every hour, UTC).
