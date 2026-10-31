@@ -325,7 +325,7 @@ const state = {
   user: lc(params.get('user') || saved.user || ''),
   areas: params.has('areas') ? csv(params.get('areas')) : saved.areas || [],
   teams: params.has('teams') ? csv(params.get('teams')) : saved.teams || [],
-  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7, sort: store.get('radar:sort', 'newest'), lanesMode: store.get('radar:lanes', 'me'),
+  tab: 'reply', query: '', limit: 40, sel: 0, filter: null, laneLimit: 7, sort: store.get('radar:sort', 'newest'), lanesMode: store.get('radar:lanes', 'me'),
 };
 let data = null, rows = [], boardRows = [], lastVisit = null;
 
@@ -403,24 +403,13 @@ function build(now) {
     const { action, who } = analyse(item, bucket, prefs.user);
     let myLast = null;
     for (const [at, actor] of item.ev) if (lc(actor) === prefs.user) myLast = at;
-    out.push({ item, bucket, since: c.since, action, who, myLast, last: lastEventAt(item), done: isDone(item) });
+    out.push({ item, bucket, since: c.since, action, who, myLast, last: lastEventAt(item), done: false });
   }
   out.sort((a, b) => ORDER.indexOf(a.bucket) - ORDER.indexOf(b.bucket)
     || (['reply', 'mine', 'backlog'].includes(a.bucket) ? (a.since < b.since ? -1 : 1) : (b.last > a.last ? 1 : -1)));
   return out;
 }
 
-// done
-const doneKey = () => `radar:done:${state.user}`;
-function isDone(item) { const at = store.get(doneKey(), {})[item.n]; return !!at && at >= lastEventAt(item); }
-function toggleDone(item) {
-  const all = store.get(doneKey(), {});
-  if (isDone(item)) delete all[item.n]; else all[item.n] = lastEventAt(item);
-  const open = new Set(data.items.map((i) => String(i.n)));
-  for (const k of Object.keys(all)) if (!open.has(k)) delete all[k];
-  store.set(doneKey(), all);
-  render();
-}
 
 // ---------------- helpers ----------------
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -726,13 +715,13 @@ function renderInner() {
       <div class="search"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}" aria-label="Filter the board"><kbd aria-hidden="true">/</kbd></div>
       ${dropdown()}
-      <label class="sw"><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}><span class="sw-track" aria-hidden="true"></span>show done</label><span class="spacer"></span>
-      <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>d</kbd> done</span></div>
+<span class="spacer"></span>
+      <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>/</kbd> search</span></div>
     <ul class="strips" id="strips"></ul>
 
     <div class="section-h"><h2>Area pulse</h2><p>Last 4 weeks of activity in the areas you watch.</p></div>
     <div class="pulse" id="pulse"></div>
-    <footer>Data from <a href="https://github.com/${esc(data.repo.split(' ')[0])}" target="_blank" rel="noopener">${esc(data.repo)}</a>, refreshed every 30 minutes. "Done", your settings and your last visit live in this browser only. <a href="classic.html${esc(location.search)}">Classic view</a></footer>`;
+    <footer>Data from <a href="https://github.com/${esc(data.repo.split(' ')[0])}" target="_blank" rel="noopener">${esc(data.repo)}</a>, refreshed every 30 minutes; closed and merged items drop out automatically. Your settings and last visit live in this browser only. <a href="classic.html${esc(location.search)}">Classic view</a></footer>`;
 
   const toBoard = () => $('#board').scrollIntoView({ behavior: 'smooth', block: 'start' });
   // Tabs only swap the list below them: no re-render, no scrolling.
@@ -749,7 +738,6 @@ function renderInner() {
   $('#lanes-more')?.addEventListener('click', () => { state.laneLimit += 20; render(); });
   main.querySelectorAll('[data-lanes]').forEach((b) => (b.onclick = () => { state.lanesMode = b.dataset.lanes; state.laneLimit = 7; store.set('radar:lanes', state.lanesMode); render(); }));
   $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
-  $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now, facts); };
   wireDropdown((value) => {
     state.sort = value; state.sel = 0; store.set('radar:sort', state.sort);
     const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
@@ -765,9 +753,9 @@ function renderBoard(now, facts) {
   if (state.filter) {
     const f = facts.find((x) => x.key === state.filter);
     const scope = new Set(data.items.filter((i) => { const a = itemAreas(i); return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x)); }).map((i) => i.n));
-    boardRows = rows.filter((r) => scope.has(r.item.n) && f.test(r) && (state.showDone || !r.done));
+    boardRows = rows.filter((r) => scope.has(r.item.n) && f.test(r));
   } else {
-    boardRows = rows.filter((r) => r.bucket === state.tab && (state.showDone || !r.done));
+    boardRows = rows.filter((r) => r.bucket === state.tab);
   }
   if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
   boardRows = [...boardRows].sort(SORTS[state.sort]?.cmp || SORTS.newest.cmp);
@@ -789,13 +777,11 @@ function renderBoard(now, facts) {
       <div class="st"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
         <div class="m">${isNew ? '<span class="newtag">NEW</span>' : ''}<span class="act">${esc(a.label)}</span>${itemAreas(it).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}${r.myLast && r.bucket !== 'reply' ? `<span>you: ${humanAge(r.myLast, now)} ago</span>` : ''}</div></div>
       <div class="from">${avatar(r.who, 24)}<span>@${esc(r.who)}</span></div>
-      <div class="tm"><b class="${over ? 'over' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b><button data-n="${it.n}">${r.done ? 'undo' : 'done'}</button></div>
+      <div class="tm"><b class="${over ? 'over' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b></div>
     </li>`;
   }).join('') + (boardRows.length > state.limit ? `<li><button class="more-btn" id="more">Show ${boardRows.length - state.limit} more</button></li>` : '');
   ul.onclick = (e) => {
-    if (e.target.id === 'more') { state.limit += 80; renderBoard(now, facts); return; }
-    const n = e.target.closest('button[data-n]')?.dataset.n;
-    if (n) toggleDone(data.items.find((i) => String(i.n) === n));
+    if (e.target.id === 'more') { state.limit += 80; renderBoard(now, facts); }
   };
 }
 
@@ -808,7 +794,6 @@ addEventListener('keydown', (e) => {
     document.querySelectorAll('#strips .strip').forEach((li) => li.classList.toggle('sel', +li.dataset.i === state.sel));
     document.querySelector(`#strips .strip[data-i="${state.sel}"]`)?.scrollIntoView({ block: 'nearest' });
   } else if (e.key === 'o') document.querySelector(`#strips .strip[data-i="${state.sel}"] .st a`)?.click();
-  else if (e.key === 'd') { const r = boardRows[state.sel]; if (r) toggleDone(r.item); }
 });
 
 // ---------------- refresh ----------------

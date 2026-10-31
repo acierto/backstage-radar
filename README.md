@@ -33,7 +33,7 @@ Type your GitHub login in the top bar ("I am @…") and toggle the areas you loo
 
 * **Area pulse:** a 4-week heatmap of activity per area, marking the days you took part.
 
-**Done** (or `d`) hides an item until something new happens on it; `j`/`k` move, `o` opens. Done-state
+Closed and merged items drop out automatically (each scan only reads open items, and the page re-checks GitHub on load). `j`/`k` move, `o` opens, `/` searches. Settings
 and "last visit" live in your browser only. The previous layout is still at `classic.html`.
 
 ## How it works
