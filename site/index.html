@@ -357,7 +357,14 @@
   .pc-gh { margin-left: auto; flex: none; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; }
   .pc-gh:hover { text-decoration: underline; }
   .pc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-  .pc-tiles div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .pc-tiles button { text-align: left; font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; transition: border-color .12s, transform .12s; }
+  .pc-tiles button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+  .pc-tiles button:disabled { cursor: default; opacity: .7; }
+  .pc-tiles button::after { content: "→"; float: right; margin-top: -22px; color: var(--ink-3); font-size: 13px; }
+  .pc-tiles button:disabled::after { content: ""; }
+  .pc-tiles.one { grid-template-columns: 1fr; }
+  .person-chip { gap: 6px; }
+  .person-chip img, .person-chip .ph { width: 18px; height: 18px; border-radius: 50%; font-size: 8px; }
   .pc-tiles b { display: block; font: 600 20px/1.1 var(--font-mono); }
   .pc-tiles span { font-size: 11.5px; color: var(--ink-2); }
   .pc-tiles .hot { border-color: color-mix(in srgb, var(--question) 45%, transparent); background: color-mix(in srgb, var(--question) 10%, var(--panel)); }
@@ -486,6 +493,8 @@ const state = {
   teams: params.has('teams') ? csv(params.get('teams')) : Array.isArray(saved.teams) ? saved.teams : [],
   // View state can come from a shared link; otherwise from this browser's last choice.
   tab: params.get('tab') || 'reply', query: params.get('q') || '', limit: 40, sel: 0, filter: params.get('fact') || null, laneLimit: 7,
+  // Person filter from the person card: { login, scope: 'asks' | 'theirs' | 'opened' | 'all' }.
+  person: params.get('person') ? { login: lc(params.get('person')), scope: ['asks', 'theirs', 'opened'].includes(params.get('pscope')) ? params.get('pscope') : 'all' } : null,
   sort: params.get('sort') || store.get('radar:sort', 'newest'), lanesMode: params.get('lanes') || store.get('radar:lanes', 'me'),
   laneFilter: ['overdue', 'new'].includes(params.get('lf')) ? params.get('lf') : null,
   showBots: params.has('bots') ? params.get('bots') === '1' : store.get('radar:bots', false),
@@ -507,7 +516,8 @@ function syncUrl() {
   if (state.teams.length) q.set('teams', state.teams.join(','));
   if (state.lanesMode === 'areas') q.set('lanes', 'areas');
   if (state.laneFilter) q.set('lf', state.laneFilter);
-  if (state.filter) q.set('fact', state.filter);
+  if (state.person) { q.set('person', state.person.login); if (state.person.scope !== 'all') q.set('pscope', state.person.scope); }
+  else if (state.filter) q.set('fact', state.filter);
   else if (state.tab !== 'reply') q.set('tab', state.tab);
   if (state.sort && state.sort !== 'newest') q.set('sort', state.sort);
   if (state.query.trim()) q.set('q', state.query.trim());
@@ -1067,9 +1077,9 @@ function renderInner() {
     <div class="section-h" id="board"><h2>Board</h2><p>Everything in your scope, one strip per item.</p></div>
     <div class="tabs" role="tablist">${ORDER.map((k) => {
       const off = noAreas() && AREA_TABS.includes(k);
-      return `<button class="tab ${off ? 'off' : ''}" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter}" ${off ? `title="${esc(NO_AREA_MSG)}"` : ''}>${TABS[k]}<b>${off ? '–' : live.filter((r) => r.bucket === k).length}</b></button>`;
+      return `<button class="tab ${off ? 'off' : ''}" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter && !state.person}" ${off ? `title="${esc(NO_AREA_MSG)}"` : ''}>${TABS[k]}<b>${off ? '–' : live.filter((r) => r.bucket === k).length}</b></button>`;
     }).join('')}</div>
-    <div class="board-tools">${state.filter ? `<span class="filter-chip">${esc(facts.find((f) => f.key === state.filter).label)}<button id="clear-filter" aria-label="Clear filter">×</button></span>` : ''}
+    <div class="board-tools">${state.person ? `<span class="filter-chip person-chip">${avatar(state.person.login, 18)}@${esc(state.person.login)} · ${esc(PERSON_SCOPES[state.person.scope].label)}<button id="clear-person" aria-label="Clear person filter">×</button></span>` : state.filter ? `<span class="filter-chip">${esc(facts.find((f) => f.key === state.filter).label)}<button id="clear-filter" aria-label="Clear filter">×</button></span>` : ''}
       <div class="search"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}" aria-label="Filter the board"><kbd aria-hidden="true">/</kbd></div>
       ${dropdown()}
@@ -1084,14 +1094,15 @@ function renderInner() {
   // Tabs only swap the list below them: no re-render, no scrolling.
   main.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => {
     state.tab = b.dataset.tab; state.sel = 0; state.limit = 40; queueMicrotask(syncUrl);
-    if (state.filter) { state.filter = null; $('.filter-chip')?.remove(); }
+    if (state.filter || state.person) { state.filter = null; state.person = null; $('.filter-chip')?.remove(); }
     main.querySelectorAll('[data-tab]').forEach((t) => t.setAttribute('aria-selected', t === b));
     // A shorter list must not pull the page up under the pointer.
     holdVisibleHeight();
     renderBoard(now, facts);
   }));
-  main.querySelectorAll('[data-fact]').forEach((b) => (b.onclick = () => { state.filter = b.dataset.fact; state.sel = 0; state.limit = 40; syncUrl(); render(); toBoard(); }));
+  main.querySelectorAll('[data-fact]').forEach((b) => (b.onclick = () => { state.person = null; state.filter = b.dataset.fact; state.sel = 0; state.limit = 40; syncUrl(); render(); toBoard(); }));
   $('#clear-filter')?.addEventListener('click', () => { state.filter = null; syncUrl(); render(); });
+  $('#clear-person')?.addEventListener('click', () => { state.person = null; syncUrl(); render(); });
   $('#lanes-more')?.addEventListener('click', () => { state.laneLimit += 20; render(); });
   main.querySelector('[data-lf-clear]')?.addEventListener('click', () => { state.laneFilter = null; syncUrl(); render(); });
   main.querySelectorAll('[data-lf]').forEach((b) => (b.onclick = () => {
@@ -1115,7 +1126,9 @@ function renderBoard(now, facts) {
   const q = raw.replace(/^[#@]/, '');
   const exactPerson = raw.startsWith('@') ? q : null;
   const cut = lastVisit ? Date.parse(lastVisit) : now - DAY;
-  if (state.filter) {
+  if (state.person) {
+    boardRows = PERSON_SCOPES[state.person.scope].rows(state.person.login);
+  } else if (state.filter) {
     const f = facts.find((x) => x.key === state.filter);
     const scope = new Set(data.items.filter((i) => { const a = itemAreas(i); return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x)); }).map((i) => i.n));
     boardRows = rows.filter((r) => scope.has(r.item.n) && f.test(r));
@@ -1227,13 +1240,28 @@ document.addEventListener('focusin', (e) => { const lane = e.target.closest?.('.
 document.addEventListener('focusout', (e) => { if (e.target.closest?.('.lane[data-n]')) hideCard(); });
 addEventListener('scroll', hideCard, { passive: true });
 
+// ---------------- person scopes ----------------
+// One definition per scope, used for both the card's numbers and the board list, so they always match.
+const PERSON_SCOPES = {
+  asks:   { label: 'waiting on you', rows: (who) => rows.filter((r) => r.bucket === 'reply' && lc(r.who) === who) },
+  theirs: { label: 'waiting on them', rows: (who) => rows.filter((r) => r.bucket === 'waiting' && lc(r.item.author) === who) },
+  opened: { label: 'their open items', rows: (who) => {
+    const byN = new Map(rows.map((r) => [r.item.n, r]));
+    return data.items.filter((i) => lc(i.author) === who).map((i) => byN.get(i.n) || {
+      item: i, bucket: 'other', action: i.t === 'pr' ? 'newpr' : 'newissue', who: i.author,
+      since: i.created, last: lastEventAt(i), myLast: null, done: false,
+    });
+  } },
+  all:    { label: 'everything', rows: (who) => rows.filter((r) => lc(r.who) === who || lc(r.item.author) === who || r.item.ev.some((e) => lc(e[1]) === who)) },
+};
+
 // ---------------- person card ----------------
 const pcard = $('#pcard');
 let pcTimer = null, pcHide = null, pcFor = null;
 function personStats(login, now) {
   const who = lc(login), user = state.user;
-  const asks = rows.filter((r) => r.bucket === 'reply' && lc(r.who) === who).sort((a, b) => (a.since < b.since ? -1 : 1));
-  const theirMove = rows.filter((r) => r.bucket === 'waiting' && lc(r.item.author) === who).length;
+  const asks = PERSON_SCOPES.asks.rows(who).sort((a, b) => (a.since < b.since ? -1 : 1));
+  const theirMove = PERSON_SCOPES.theirs.rows(who).length;
   const opened = data.items.filter((i) => lc(i.author) === who);
   const inAreas = opened.filter((i) => { const a = itemAreas(i); return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x)); }).length;
   let last = null, pings90 = 0, waits = [];
@@ -1264,10 +1292,10 @@ function personHtml(login, now) {
       <div class="hc-who">${avatar(login, 40)}<div style="min-width:0"><div class="hc-name">@${esc(login)}${isMe ? ' <span class="pc-you">you</span>' : ''}</div>
         <div class="hc-verb">${s.last ? `active ${humanAge(s.last, now)} ago in ${esc(data.repo.split(' ')[0])}` : 'no recent activity'}</div></div>
         <a class="pc-gh" href="https://github.com/${encodeURIComponent(login)}" target="_blank" rel="noopener">GitHub ↗</a></div>
-      <div class="pc-tiles">
-        <div class="${s.asks.length ? 'hot' : ''}"><b>${s.asks.length}</b><span>waiting on you</span></div>
-        <div><b>${s.theirMove}</b><span>waiting on them</span></div>
-        <div><b>${s.opened}</b><span>open by them${s.inAreas && !state.areas.includes('all') ? ` · ${s.inAreas} in your areas` : ''}</span></div>
+      <div class="pc-tiles ${isMe ? 'one' : ''}">
+        ${isMe ? '' : `<button class="${s.asks.length ? 'hot' : ''}" data-pscope="asks" data-login="${esc(login)}" ${s.asks.length ? '' : 'disabled'} title="Their asks that still need your reply"><b>${s.asks.length}</b><span>waiting on you</span></button>
+        <button data-pscope="theirs" data-login="${esc(login)}" ${s.theirMove ? '' : 'disabled'} title="Their issues and PRs in your areas where you replied last"><b>${s.theirMove}</b><span>waiting on them</span></button>`}
+        <button data-pscope="opened" data-login="${esc(login)}" ${s.opened ? '' : 'disabled'} title="Issues and PRs ${isMe ? 'you' : 'they'} opened that are still open, in any area"><b>${s.opened}</b><span>${isMe ? 'your open items' : 'their open items'}${s.inAreas && !state.areas.includes('all') && s.inAreas !== s.opened ? ` · ${s.inAreas} in your areas` : ''}</span></button>
       </div>
     </div>
     <div class="hc-body">
@@ -1297,11 +1325,9 @@ function hidePerson(delay = 160) {
   clearTimeout(pcTimer); clearTimeout(pcHide);
   pcHide = setTimeout(() => { pcard.hidden = true; pcFor = null; }, delay);
 }
-function filterByPerson(login) {
+function filterByPerson(login, scope = 'all') {
   pcard.hidden = true; pcFor = null;
-  state.query = `@${login}`; state.filter = null; state.sel = 0; state.limit = 40;
-  const hasAsks = rows.some((r) => r.bucket === 'reply' && lc(r.who) === lc(login));
-  if (hasAsks) state.tab = 'reply';
+  state.person = { login: lc(login), scope }; state.filter = null; state.query = ''; state.sel = 0; state.limit = 40;
   syncUrl(); render();
   $('#board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1313,6 +1339,8 @@ document.addEventListener('mouseover', (e) => {
   else clearTimeout(pcTimer);
 });
 document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-pscope]');
+  if (t) { if (!t.disabled) filterByPerson(t.dataset.login, t.dataset.pscope); return; }
   const f = e.target.closest('[data-filter-person]');
   if (f) { filterByPerson(f.dataset.filterPerson); return; }
   const p = e.target.closest('[data-person]');
