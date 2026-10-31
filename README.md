@@ -36,6 +36,12 @@ Type your GitHub login in the top bar ("I am @…") and toggle the areas you loo
 Closed and merged items drop out automatically (each scan only reads open items, and the page re-checks GitHub on load). `j`/`k` move, `o` opens, `/` searches. Settings
 and "last visit" live in your browser only. The previous layout is still at `classic.html`.
 
+### What counts as "waiting on you"
+
+* A comment **addressed to you** ("@you what do you think?", "Thanks @alice! @you can you review?") or a review request.
+* Not a passing reference: "Hi @alice, can you run with what @you shared?" pings alice, not you. `cc @you` / `fyi @you` lines are references too.
+* **Seen it, no reply needed?** React to that comment on GitHub (👍, 👀, anything). The next scan treats the ping as handled. It's stored on GitHub, so it's the same on every device.
+
 ## How it works
 
 ```
