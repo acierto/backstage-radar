@@ -5,7 +5,7 @@
 // Usage: GITHUB_TOKEN=... node src/collect.mjs [--out site/data.json]
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { loadConfig } from './config.mjs';
+import { loadConfig, loadSubscribers } from './config.mjs';
 import { extractMentions } from './mentions.mjs';
 
 const config = await loadConfig();
@@ -185,11 +185,18 @@ const pulls = await fetchAll(PULLS, 'pullRequests');
 const items = [...issues.map((n) => toItem(n, 'issue')), ...pulls.map((n) => toItem(n, 'pr'))];
 const areas = [...new Set(items.flatMap((i) => i.labels).filter((l) => l.startsWith('area:')).map((l) => l.slice(5)))].sort();
 
+// Starting areas/teams for people listed in subscribers.yml (everyone else starts on all areas).
+let defaults = {};
+try {
+  for (const sub of await loadSubscribers()) defaults[sub.user] = { areas: sub.areas, teams: sub.teams };
+} catch { /* no subscribers.yml: no defaults */ }
+
 const data = {
   repo: config.repo,
   generatedAt: new Date().toISOString(),
   areas,
   items,
+  defaults,
 };
 
 await mkdir(dirname(out), { recursive: true });
