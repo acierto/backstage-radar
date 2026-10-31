@@ -658,9 +658,9 @@ function renderAreaList() {
   const counts = areaCounts();
   const check = '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5.2l2 2L8 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const opt = (key, label, n, on, cls = '') => `<button class="am-opt ${cls}" role="option" data-a="${esc(key)}" aria-selected="${on}"><span class="box">${on ? check : ''}</span><span>${esc(label)}</span><span class="cnt">${n}</span></button>`;
-  // Areas that start with the search come first, then the busiest.
+  // Alphabetical; while searching, areas that start with the search come first.
   const list = data.areas.filter((a) => !q || a.includes(q))
-    .sort((a, b) => (q ? Number(b.startsWith(q)) - Number(a.startsWith(q)) : 0) || (counts.get(b) || 0) - (counts.get(a) || 0));
+    .sort((a, b) => (q ? Number(b.startsWith(q)) - Number(a.startsWith(q)) : 0) || a.localeCompare(b));
   $('#area-list').innerHTML =
     (!q ? opt('all', 'All areas', data.items.filter((i) => itemAreas(i).length).length, all, 'all') : '') +
     (list.map((a) => opt(a, a, counts.get(a) || 0, !all && state.areas.includes(a))).join('') || '<div class="am-empty">No area matches.</div>');
