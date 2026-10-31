@@ -9,21 +9,32 @@ It replaces hundreds of GitHub notification emails with one page and at most one
 
 ## What it shows
 
-Open the dashboard, type your GitHub login, and pick your areas (or **All areas** if you're a core maintainer).
-Every open issue and PR is sorted into one of five buckets:
+Type your GitHub login in the top bar ("I am @…") and toggle the areas you look after right below it
+(or **all areas** if you're a core maintainer). Settings live in the URL
+(`?user=acierto&areas=scaffolder,catalog&teams=scaffolder-maintainers`), so you can bookmark or share them.
 
-| Bucket | Meaning |
-|---|---|
-| **Needs your reply** | Someone @mentioned you (or your team) or requested your review, and you haven't commented, reviewed or pushed since. |
-| **Activity on your items** | Your own issue/PR where someone else spoke last. |
-| **New in your areas** | Open items with your `area:*` labels that you have never touched. |
-| **New activity in your areas** | You took part earlier, and others posted after your last reply. |
-| **Waiting on others** | In your areas, and the last word is yours. |
+* **Who is waiting:** one lane per open ask, oldest first, with the person's avatar, what they want
+  (*Question*, *Review*, *Re-review* when the author pushed after your review) and a bar from when they
+  asked until now. Anything older than 7 days is marked overdue.
+* **Right now:** how many people are waiting, overdue count, new since your last visit, and a 30-day
+  trend of your queue.
+* **In your areas:** new this week, PRs with no review yet, issues needing triage, quiet for 30+ days.
+  Click one to filter the board.
+* **Board:** every item in your scope, one strip per item, in six tabs:
 
-Three charts sit on top: how long things have been waiting on you, a per-area breakdown, and the last 30 days of activity (others vs you).
-**Done** hides an item until something new happens on it. It's stored in your browser only.
+  | Tab | Meaning |
+  |---|---|
+  | **Waiting on you** | Someone @mentioned you (or your team) or requested your review, and you haven't commented, reviewed or pushed since. |
+  | **Replies on yours** | Your own issue/PR where someone else spoke last. |
+  | **New this week** | Items in your areas you've never touched, active in the last 7 days. |
+  | **Replied after you** | You took part; others posted after your last reply. |
+  | **Their move** | In your areas, and the last word is yours. |
+  | **Backlog** | Items in your areas you've never touched, quiet for 7+ days. |
 
-Your settings live in the URL (`?user=acierto&areas=scaffolder,catalog&teams=scaffolder-maintainers`), so you can bookmark them or share them.
+* **Area pulse:** a 4-week heatmap of activity per area, marking the days you took part.
+
+**Done** (or `d`) hides an item until something new happens on it; `j`/`k` move, `o` opens. Done-state
+and "last visit" live in your browser only. The previous layout is still at `classic.html`.
 
 ## How it works
 
