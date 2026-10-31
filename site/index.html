@@ -456,7 +456,7 @@ function lanes(now) {
       <div class="id">${avatar(r.who, 34)}<div style="min-width:0"><div><span class="who-name">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
         <div class="ttl"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}</div></div></div>
       <div class="track">${grid}<span class="span" style="left:${left}%;right:0"></span><span class="start" style="left:${left}%"></span></div>
-      <div class="age ${over ? 'over' : ''}">${w.v}<small>${over ? 'overdue' : w.u}</small></div></a>`;
+      <div class="age ${over ? 'over' : ''}">${over ? humanAge(r.since, now) : w.v}<small>${over ? 'overdue' : w.u}</small></div></a>`;
   };
   return `<div class="lanes">
     <div class="lanes-h"><h2>Who is waiting</h2>${toggle}<p>${mode === 'me' ? 'Asked you directly' : 'New or unanswered in your areas'} · newest first · the bar runs from ${mode === 'me' ? 'when they asked' : 'their last message'} to now</p></div>
