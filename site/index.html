@@ -397,15 +397,77 @@
     .strip { grid-template-columns: 6px 74px minmax(0, 1fr) 80px; }
     .strip .from { display: none; }
   }
+  .m-num { display: none; }
   @media (max-width: 600px) {
+    /* header: brand + status + icons on one row, login on the next, chips scroll sideways */
     .bar { position: static; }
-    .status-menu { right: auto; left: 0; }
-    .iam input { width: 110px; }
-    .axis { display: none; }
-    .lane { grid-template-columns: minmax(0, 1fr) 56px; }
-    .lane .track { grid-column: 1 / -1; grid-row: 2; }
+    .bar-in { display: grid; grid-template-columns: auto 1fr auto auto auto auto; gap: 8px 6px; padding-block: 10px 8px; }
+    .bar-in .spacer { display: block; }
+    .brand { font-size: 16px; letter-spacing: .1em; gap: 8px; }
+    .brand small { display: none; }
+    .iam { grid-column: 1 / -1; grid-row: 2; }
+    .iam input { width: 100%; flex: 1; }
+    .status { padding: 6px 9px; }
+    .status .f-n { display: none; }
+    .status-menu { right: -96px; width: min(300px, calc(100vw - 32px)); }
+    .icon-only { padding: 7px; }
+    .areas-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+    .areas-row::-webkit-scrollbar { display: none; }
+    .areas-row .chips { flex-wrap: nowrap; }
+    .areas-row .spacer { flex: 0 0 8px; }
+    .chip-x, .add-btn { flex: none; white-space: nowrap; }
+    .area-menu { position: fixed; left: 16px; right: 16px; top: auto; width: auto; margin-top: 4px; }
+
+    /* hero */
+    .hero { padding-block: 18px 0; gap: 16px; }
+    .eyebrow { font-size: 10px; }
+    .headline { font-size: 28px; margin: 4px 0 10px; }
+    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat { padding: 8px 10px; }
+    .stat b, .stat.act b { font-size: 18px; }
+    .stat span, .stat.act span { font-size: 11px; line-height: 1.3; }
+    .stat.wide { grid-column: auto; }
+    .rt-more { display: none; }
+
+    /* who is waiting: compact rows, the age says how long */
+    .lanes { padding: 14px 14px 6px; border-radius: 12px; }
+    .lanes-h { gap: 8px; }
+    .lanes-h h2 { font-size: 18px; }
+    .lanes-h p, .lanes .key, .axis { display: none; }
+    .seg button { padding: 5px 10px; }
+    .lane { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 10px 0; }
+    .lane .track { display: none; }
+    .lane .id { grid-template-columns: 36px minmax(0, 1fr); }
+    .lane .ttl { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; margin-top: 2px; }
+    .lane .age { font-size: 15px; }
+    .cheer { padding: 16px 0 14px; gap: 16px; }
+    .cheer-badge { width: 84px; height: 84px; }
+    .cheer-text h3 { font-size: 24px; }
+    .lf-chip { order: 3; }
+
+    /* board: number moves into the text, titles get two lines */
+    .section-h { margin: 28px 0 10px; }
+    .section-h h2 { font-size: 20px; }
+    .section-h p { display: none; }
+    .tab { padding: 7px 12px; }
+    .board-tools { gap: 8px; }
     .search { width: 100%; }
     .board-tools .keys { display: none; }
+    .board-tools .spacer { display: none; }
+    .strip { grid-template-columns: 5px minmax(0, 1fr) auto; }
+    .strip .cs { display: none; }
+    .strip > * { padding: 10px 12px; }
+    .strip > .edge { padding: 0; }
+    .st a { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; font-size: 14px; }
+    .m-num { display: block; font: 600 11px var(--font-mono); color: var(--ink-3); margin-bottom: 2px; }
+    .st .m .chip { display: none; }
+    .tm { border-left: 0; padding-left: 4px; }
+    .tm b { font-size: 14px; }
+
+    /* person card fits the screen */
+    .pcard { width: calc(100vw - 24px); }
+    .pc-tiles span { font-size: 11px; }
+    .pc-tiles button::after { content: none; }
   }
 </style>
 </head>
@@ -1063,7 +1125,7 @@ function renderInner() {
           <div class="stats">
             <button class="stat act ${overdue ? 'warn' : ''} ${state.laneFilter === 'overdue' ? 'on' : ''}" data-lf="overdue" aria-pressed="${state.laneFilter === 'overdue'}" title="Show only overdue asks"><b>${overdue}</b><span>overdue (${OVERDUE_DAYS}+ days)</span></button>
             <button class="stat act ${state.laneFilter === 'new' ? 'on' : ''}" data-lf="new" aria-pressed="${state.laneFilter === 'new'}" title="Show only asks that arrived since your last visit"><b>${newForMe}</b><span>new since last visit</span></button>
-            <div class="stat wide" title="Median time between someone asking you and your next comment, review or push, for asks in the last 90 days"><b>${rt.label}</b><span>${rt.n ? `your typical reply time · ${rt.n} answered asks, last 90 days` : 'your typical reply time · no answered asks in the last 90 days'}</span></div>
+            <div class="stat wide" title="Median time between someone asking you and your next comment, review or push, for asks in the last 90 days"><b>${rt.label}</b><span>your typical reply time<span class="rt-more"> · ${rt.n ? `${rt.n} answered asks, last 90 days` : 'no answered asks in the last 90 days'}</span></span></div>
           </div>
         </div>
         <div class="summary">
@@ -1153,7 +1215,7 @@ function renderBoard(now, facts) {
     return `<li class="strip ${r.done ? 'done' : ''} ${i === state.sel ? 'sel' : ''}" data-i="${i}" data-n="${it.n}" style="${colorVars(r.action)}">
       <span class="edge"></span>
       <div class="cs"><b>#${it.n}</b><small>${it.t === 'pr' ? (it.draft ? 'draft pr' : 'pr') : 'issue'}</small></div>
-      <div class="st"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
+      <div class="st"><span class="m-num">#${it.n} · ${it.t === 'pr' ? (it.draft ? 'draft PR' : 'PR') : 'issue'}</span><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
         <div class="m">${isNew ? '<span class="newtag">NEW</span>' : ''}<span class="act">${esc(a.label)}</span>${itemAreas(it).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}${r.myLast && r.bucket !== 'reply' ? `<span>you: ${humanAge(r.myLast, now)} ago</span>` : ''}</div></div>
       <div class="from pp" data-person="${esc(r.who)}" title="Show everything with @${esc(r.who)}">${avatar(r.who, 24)}<span>@${esc(r.who)}</span></div>
       <div class="tm"><b class="${over ? 'over' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b></div>
@@ -1214,6 +1276,7 @@ function placeCard(anchor) {
   hcard.style.left = `${left}px`; hcard.style.top = `${top}px`;
 }
 function showCard(el, anchor, delay = 280) {
+  if (matchMedia('(hover: none)').matches) return;
   clearTimeout(hcTimer);
   const n = +el.dataset.n;
   hcTimer = setTimeout(() => {
@@ -1256,6 +1319,7 @@ const PERSON_SCOPES = {
 };
 
 // ---------------- person card ----------------
+const NO_HOVER = matchMedia('(hover: none)').matches;
 const pcard = $('#pcard');
 let pcTimer = null, pcHide = null, pcFor = null;
 function personStats(login, now) {
@@ -1332,6 +1396,7 @@ function filterByPerson(login, scope = 'all') {
   $('#board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 document.addEventListener('mouseover', (e) => {
+  if (NO_HOVER) return;
   const p = e.target.closest('[data-person]');
   if (p) { showPerson(p); return; }
   if (e.target.closest('#pcard')) { clearTimeout(pcHide); return; }
@@ -1344,7 +1409,14 @@ document.addEventListener('click', (e) => {
   const f = e.target.closest('[data-filter-person]');
   if (f) { filterByPerson(f.dataset.filterPerson); return; }
   const p = e.target.closest('[data-person]');
-  if (p) { e.preventDefault(); e.stopPropagation(); filterByPerson(p.dataset.person); }
+  if (p) {
+    e.preventDefault(); e.stopPropagation();
+    // Touch screens have no hover: the first tap opens the card, its button filters the board.
+    if (NO_HOVER) { clearTimeout(pcTimer); pcFor = p; pcard.innerHTML = personHtml(p.dataset.person, Date.now()); pcard.hidden = false; placeAt(pcard, p); return; }
+    filterByPerson(p.dataset.person);
+    return;
+  }
+  if (NO_HOVER && !pcard.hidden && !e.target.closest('#pcard')) { pcard.hidden = true; pcFor = null; }
 }, true);
 addEventListener('scroll', () => { if (!pcard.hidden) hidePerson(0); }, { passive: true });
 
@@ -1424,7 +1496,7 @@ async function load(first) {
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
     const now = Date.now();
-    $('#fresh').textContent = `${data.items.length} open · ${humanAge(data.generatedAt, now)} ago`;
+    $('#fresh').innerHTML = `<span class="f-n">${data.items.length} open · </span>${humanAge(data.generatedAt, now)} ago`;
     $('#status-btn').classList.toggle('warm', age > 45 && age <= 180);
     $('#status-btn').classList.toggle('stale', age > 180);
     $('#status-btn').title = age > 180 ? 'The last scan is over 3 hours old' : 'Data status';
@@ -1442,7 +1514,13 @@ async function load(first) {
     $('#status-btn').classList.add('stale');
   }
 }
-let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+// Phones fire 'resize' while scrolling (the address bar shows/hides). Only a width change needs a
+// re-render; re-rendering on every scroll was what made avatars blink.
+let rt, lastW = innerWidth;
+addEventListener('resize', () => {
+  if (innerWidth === lastW) return;
+  lastW = innerWidth; clearTimeout(rt); rt = setTimeout(render, 150);
+});
 load(true);
 setInterval(() => load(false), 5 * 60 * 1000);
 </script>
