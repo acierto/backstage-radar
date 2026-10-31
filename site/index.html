@@ -84,6 +84,8 @@
   .fresh.stale { color: var(--overdue); }
   .icon-btn { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
   .icon-btn:hover { border-color: var(--accent); }
+  a.icon-btn { text-decoration: none; }
+  .icon-btn:disabled { opacity: .6; cursor: progress; }
   .areas-row { padding-block: 0 10px; display: flex; align-items: center; gap: 10px; }
   .areas-row > span { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); flex: none; }
   .areas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; min-width: 0; }
@@ -248,6 +250,8 @@
     </div>
     <span class="spacer"></span>
     <span class="fresh" id="fresh">loading…</span>
+    <button class="icon-btn" id="refresh" title="Reload the latest scan and hide anything closed since">↻ Refresh</button>
+    <a class="icon-btn" id="scan" hidden target="_blank" rel="noopener" title="Open the scan workflow on GitHub and press Run workflow">Scan now ↗</a>
     <button class="icon-btn" id="share">Copy my link</button>
     <button class="icon-btn" id="theme" aria-label="Switch light or dark">◐</button>
   </div>
@@ -411,7 +415,7 @@ const userEl = $('#user'), teamsEl = $('#teams');
 userEl.value = state.user; teamsEl.value = state.teams.join(', ');
 function paintMe() { $('#me-ph').outerHTML = `<span id="me-ph" style="display:contents">${state.user ? avatar(state.user, 26) : '<span class="ph"></span>'}</span>`; }
 let typing;
-userEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc(userEl.value.trim().replace(/^@/, '')); savePrefs(); readVisit(); paintMe(); render(); }, 400); };
+userEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc(userEl.value.trim().replace(/^@/, '')); savePrefs(); readVisit(); paintMe(); paintScanLink(); render(); }, 400); };
 teamsEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.teams = csv(teamsEl.value); savePrefs(); render(); }, 400); };
 
 function renderAreas() {
@@ -699,6 +703,35 @@ addEventListener('keydown', (e) => {
   else if (e.key === 'd') { const r = boardRows[state.sel]; if (r) toggleDone(r.item); }
 });
 
+// ---------------- refresh ----------------
+// Scans run on the schedule in collect.yml (minutes 7 and 37 of every hour, UTC).
+function nextScanIn(now) {
+  const d = new Date(now);
+  const m = d.getUTCMinutes();
+  const next = m < 7 ? 7 : m < 37 ? 37 : 67;
+  return next - m;
+}
+// On <owner>.github.io/<repo>/ the owner can start a scan from the Actions tab.
+const site = (() => {
+  const m = /^([\w-]+)\.github\.io$/i.exec(location.hostname);
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  return m && repo ? { owner: m[1].toLowerCase(), repo } : null;
+})();
+function paintScanLink() {
+  const a = $('#scan');
+  if (site && state.user === site.owner) {
+    a.href = `https://github.com/${site.owner}/${site.repo}/actions/workflows/collect.yml`;
+    a.hidden = false;
+  } else a.hidden = true;
+}
+$('#refresh').onclick = async () => {
+  const b = $('#refresh');
+  b.disabled = true; b.textContent = '↻ Refreshing…';
+  await load(false);
+  b.textContent = '✓ Up to date';
+  setTimeout(() => { b.textContent = '↻ Refresh'; b.disabled = false; }, 1500);
+};
+
 // ---------------- load ----------------
 // The scan can be up to 30 minutes old (longer if CI stalls). Ask GitHub which items closed or merged
 // since then and hide them. One unauthenticated call; if it fails, the page simply shows the scan.
@@ -724,7 +757,8 @@ async function load(first) {
     const hidden = await dropClosedSinceScan(repo);
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
-    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago${hidden ? ` · ${hidden} closed since, hidden` : ''}`;
+    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago · next in ${nextScanIn(Date.now())}m${hidden ? ` · ${hidden} closed since, hidden` : ''}`;
+    paintScanLink();
     $('#fresh').classList.toggle('stale', age > 180);
     if (first) { if (state.user) readVisit(); paintMe(); }
     render();
