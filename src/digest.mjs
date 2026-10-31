@@ -12,14 +12,15 @@
 // Usage: node src/digest.mjs [--data site/data.json] [--dry-run] [--only acierto]
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { loadConfig, loadSubscribers } from './config.mjs';
-import { buildInbox, BUCKETS, humanAge } from '../site/logic.js';
+import { buildInbox, BUCKETS, humanAge, withoutBots } from '../site/logic.js';
 
 const arg = (name) => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : undefined);
 const dryRun = process.argv.includes('--dry-run');
 const only = arg('--only')?.toLowerCase().replace(/^@/, '');
 
 const config = await loadConfig();
-const data = JSON.parse(await readFile(arg('--data') || 'site/data.json', 'utf8'));
+// The digest never counts bot activity (Copilot reviews, Dependabot, …) as replies or pings.
+const data = withoutBots(JSON.parse(await readFile(arg('--data') || 'site/data.json', 'utf8')));
 const subscribers = (await loadSubscribers()).filter((s) => (only ? s.user === only : s.digest));
 const now = Date.now();
 const cutoff = new Date(now - config.digest.lookbackHours * 60 * 60 * 1000).toISOString();

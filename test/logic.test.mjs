@@ -83,3 +83,18 @@ test('a reaction from you on the pinging comment clears the ping', () => {
   const evNoAck = [['2026-10-02T00:00:00Z', 'bob', 'c', ['acierto'], [], ['kim']]];
   assert.equal(classify({ ...base, ev: evNoAck }, { user: 'acierto', areas: [] }).bucket, 'reply');
 });
+
+test('bots: their replies never count, items they opened are hidden', async () => {
+  const { withoutBots } = await import('../site/logic.js');
+  const data = {
+    bots: ['copilot-pull-request-reviewer'],
+    items: [
+      { ...base, author: 'acierto', ev: [['2026-10-01T00:00:00Z', 'acierto', 'open'], ['2026-10-02T00:00:00Z', 'copilot-pull-request-reviewer', 'r']] },
+      { ...base, n: 2, author: 'dependabot', ev: [['2026-10-01T00:00:00Z', 'dependabot', 'open']] },
+    ],
+  };
+  assert.equal(classify(data.items[0], { user: 'acierto', areas: [] }).bucket, 'mine');
+  const clean = withoutBots(data);
+  assert.equal(clean.items.length, 1, 'bot-authored item dropped (name fallback)');
+  assert.equal(classify(clean.items[0], { user: 'acierto', areas: [] }), null, 'copilot review is not a reply');
+});

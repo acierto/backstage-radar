@@ -17,12 +17,12 @@ if (!token) {
   process.exit(1);
 }
 
-const ACTOR = `author { login }`;
+const ACTOR = `author { __typename login }`;
 // Who reacted to a comment. A reaction from the person it pings means "seen, no reply needed".
 const REACTORS = `reactionGroups { reactors(first: 10) { nodes { ... on User { login } } } }`;
 const COMMON = `
   number title url createdAt updatedAt body
-  author { login }
+  author { __typename login }
   ${REACTORS}
   labels(first: 30) { nodes { name } }
   comments(last: ${config.limits.comments}) { nodes { ${ACTOR} createdAt body ${REACTORS} } }
@@ -104,10 +104,20 @@ async function fetchAll(query, field) {
 }
 
 const bots = config.bots.map((b) => b.toLowerCase());
-const isBot = (login) => !login || login.endsWith('[bot]') || bots.includes(login.toLowerCase());
+// Bot accounts are kept in the data but listed in data.bots, so the dashboard can hide them
+// (the default) or show them. GitHub's GraphQL API reports bots without the "[bot]" suffix
+// (e.g. copilot-pull-request-reviewer), so the account type is what identifies them.
+const botLogins = new Set(bots);
+function login(author) {
+  const l = author?.login;
+  if (!l) return null;
+  if (author.__typename === 'Bot' || l.endsWith('[bot]') || bots.includes(l.toLowerCase())) botLogins.add(l.toLowerCase());
+  return l;
+}
 
-function event(at, actor, kind, body, reactionGroups) {
-  if (!at || isBot(actor)) return null;
+function event(at, author, kind, body, reactionGroups) {
+  const actor = login(author);
+  if (!at || !actor) return null;
   const { users, teams } = extractMentions(body || '', owner);
   // Keep only reactions from people this comment pings: that is all the dashboard needs.
   const reactors = new Set((reactionGroups || []).flatMap((g) => g.reactors?.nodes || []).map((u) => u?.login?.toLowerCase()).filter(Boolean));
@@ -121,9 +131,9 @@ function reviewer(r) {
 }
 
 function toItem(node, t) {
-  const author = node.author?.login || 'ghost';
-  const ev = [event(node.createdAt, author, 'open', node.body, node.reactionGroups)];
-  for (const c of node.comments.nodes) ev.push(event(c.createdAt, c.author?.login, 'c', c.body, c.reactionGroups));
+  const author = login(node.author) || 'ghost';
+  const ev = [event(node.createdAt, node.author, 'open', node.body, node.reactionGroups)];
+  for (const c of node.comments.nodes) ev.push(event(c.createdAt, c.author, 'c', c.body, c.reactionGroups));
 
   const item = {
     n: node.number,
@@ -141,12 +151,12 @@ function toItem(node, t) {
 
   if (t === 'pr') {
     for (const r of node.reviews.nodes) {
-      ev.push(event(r.submittedAt, r.author?.login, 'r', r.body, r.reactionGroups));
-      for (const c of r.comments.nodes) ev.push(event(c.createdAt, c.author?.login, 'rc', c.body));
+      ev.push(event(r.submittedAt, r.author, 'r', r.body, r.reactionGroups));
+      for (const c of r.comments.nodes) ev.push(event(c.createdAt, c.author, 'rc', c.body));
     }
     for (const { commit } of node.commits.nodes) {
-      const login = commit.authors.nodes[0]?.user?.login;
-      if (login) ev.push(event(commit.committedDate, login, 'p', ''));
+      const pusher = commit.authors.nodes[0]?.user?.login;
+      if (pusher) ev.push(event(commit.committedDate, { login: pusher }, 'p', ''));
     }
     for (const rr of node.reviewRequests.nodes) {
       const { user, team } = reviewer(rr.requestedReviewer);
@@ -197,6 +207,7 @@ const data = {
   areas,
   items,
   defaults,
+  bots: [...botLogins].sort(),
 };
 
 await mkdir(dirname(out), { recursive: true });

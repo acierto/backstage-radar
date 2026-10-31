@@ -439,7 +439,7 @@
 <div class="hcard" id="hcard" role="tooltip" hidden></div>
 
 <script type="module">
-import { classify, humanAge, itemAreas, DAY } from './logic.js';
+import { classify, humanAge, itemAreas, DAY, withoutBots } from './logic.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -462,8 +462,11 @@ const state = {
   tab: params.get('tab') || 'reply', query: params.get('q') || '', limit: 40, sel: 0, filter: params.get('fact') || null, laneLimit: 7,
   sort: params.get('sort') || store.get('radar:sort', 'newest'), lanesMode: params.get('lanes') || store.get('radar:lanes', 'me'),
   laneFilter: ['overdue', 'new'].includes(params.get('lf')) ? params.get('lf') : null,
+  showBots: params.has('bots') ? params.get('bots') === '1' : store.get('radar:bots', false),
 };
-let data = null, rows = [], boardRows = [], lastVisit = null;
+let data = null, rawData = null, rows = [], boardRows = [], lastVisit = null;
+// Bots (Copilot reviews, Dependabot, …) are hidden by default: their activity doesn't count as a reply or ping.
+const applyBots = () => { data = state.showBots ? rawData : withoutBots(rawData); };
 
 function savePrefs() {
   store.set('radar:prefs', { user: state.user, areas: state.areas, teams: state.teams });
@@ -482,6 +485,7 @@ function syncUrl() {
   else if (state.tab !== 'reply') q.set('tab', state.tab);
   if (state.sort && state.sort !== 'newest') q.set('sort', state.sort);
   if (state.query.trim()) q.set('q', state.query.trim());
+  if (state.showBots) q.set('bots', '1');
   if (typeof pulseDlg !== 'undefined' && pulseDlg.open) q.set('pulse', '1');
   try { history.replaceState(null, '', `${location.pathname}${q.toString() ? `?${q}` : ''}`); } catch { /* sandboxed */ }
 }
@@ -1044,6 +1048,7 @@ function renderInner() {
         <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}" aria-label="Filter the board"><kbd aria-hidden="true">/</kbd></div>
       ${dropdown()}
 <span class="spacer"></span>
+      <label class="sw" title="Bots such as Copilot reviews and Dependabot. Hidden by default: their activity doesn't count as a reply or a ping."><input type="checkbox" id="show-bots" ${state.showBots ? 'checked' : ''}><span class="sw-track" aria-hidden="true"></span>show bots</label>
       <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>/</kbd> search</span></div>
     <ul class="strips" id="strips"></ul>
 
@@ -1068,6 +1073,7 @@ function renderInner() {
     state.lanesMode = 'me'; state.laneLimit = 7; syncUrl(); render();
   }));
   main.querySelectorAll('[data-lanes]').forEach((b) => (b.onclick = () => { state.lanesMode = b.dataset.lanes; state.laneLimit = 7; if (b.dataset.lanes === 'areas') state.laneFilter = null; store.set('radar:lanes', state.lanesMode); syncUrl(); render(); }));
+  $('#show-bots').onchange = (e) => { state.showBots = e.target.checked; store.set('radar:bots', state.showBots); applyBots(); syncUrl(); render(); };
   let qT; $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); clearTimeout(qT); qT = setTimeout(syncUrl, 300); };
   wireDropdown((value) => {
     state.sort = value; state.sel = 0; store.set('radar:sort', state.sort); syncUrl();
@@ -1263,6 +1269,7 @@ async function load(first) {
     const repo = data.repo.split(' ')[0];
     for (const i of data.items) i.url ||= `https://github.com/${repo}/${i.t === 'pr' ? 'pull' : 'issues'}/${i.n}`;
     const hidden = await dropClosedSinceScan(repo);
+    rawData = data; applyBots();
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
     const now = Date.now();

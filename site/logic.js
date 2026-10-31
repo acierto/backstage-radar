@@ -161,3 +161,19 @@ export function dailyActivity(data, prefs, rows, days, now) {
   }
   return { keys, others: keys.map((k) => others[k]), mine: keys.map((k) => mine[k]) };
 }
+
+// ---------------- bots ----------------
+// Common bot accounts, used when a scan didn't list them (older data.json) and as a safety net.
+const BOT_NAME = /\[bot\]$|^(copilot|dependabot|renovate|github-actions|codecov|netlify|changeset-bot|backstage-goalie|backstage-service)\b|-bot$/i;
+
+/** Returns data with bot activity removed: their comments/reviews/pushes and the items they opened. */
+export function withoutBots(data) {
+  const bots = new Set((data.bots || []).map(lc));
+  const isBot = (login) => bots.has(lc(login)) || BOT_NAME.test(login || '');
+  return {
+    ...data,
+    items: data.items
+      .filter((i) => !isBot(i.author))
+      .map((i) => ({ ...i, ev: i.ev.filter((e) => !isBot(e[1])) })),
+  };
+}
