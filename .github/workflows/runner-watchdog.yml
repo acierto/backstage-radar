@@ -36,25 +36,46 @@ jobs:
       - name: Rescue jobs stuck waiting for agents-runner
         run: |
           set -euo pipefail
+          # While an alert is already open the runner is known to be down, so act faster.
+          threshold=$MAX_QUEUED_SECONDS
+          [ -n "$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number // empty')" ] && threshold=120
+
+          # "<run id> <event> <workflow file> <age in s of its oldest queued Oracle job>"
           for status in queued in_progress; do
             gh api "repos/$GH_REPO/actions/runs?status=$status&per_page=30" \
               --jq '.workflow_runs[] | "\(.id) \(.event) \(.path | split("/") | last)"'
           done | sort -u | while read -r id event wf; do
             case " $RESCUABLE " in *" $wf "*) ;; *) continue ;; esac
-            stuck=$(gh api "repos/$GH_REPO/actions/runs/$id/jobs" --jq '
+            age=$(gh api "repos/$GH_REPO/actions/runs/$id/jobs" --jq '
               [.jobs[] | select(.status == "queued" and (.labels | index("oracle")))
-                | select((now - (.created_at | fromdateiso8601)) > ($ENV.MAX_QUEUED_SECONDS | tonumber))] | length')
-            [ "$stuck" -gt 0 ] || continue
-            echo "::warning::Run $id ($wf, $event) has been waiting for agents-runner > ${MAX_QUEUED_SECONDS}s"
+                | now - (.created_at | fromdateiso8601) | floor] | max // empty')
+            [ -n "$age" ] && echo "$id $event $wf $age"
+          done > "$RUNNER_TEMP/waiting" || true
+          cat "$RUNNER_TEMP/waiting"
+
+          # Runner counts as down if any Oracle job has waited past the threshold.
+          if ! awk -v t="$threshold" '$4 > t { found=1 } END { exit !found }' "$RUNNER_TEMP/waiting"; then
+            echo "No Oracle job waiting longer than ${threshold}s."
+            exit 0
+          fi
+
+          # Clear every waiting Oracle job (otherwise younger ones block the
+          # workflow's concurrency group), then re-dispatch each workflow once.
+          declare -A dispatch=()
+          while read -r id event wf age; do
+            echo "::warning::Cancelling run $id ($wf, $event): waited ${age}s for agents-runner"
             gh run cancel "$id" || true
+            echo "$wf ($event, run $id, waited $((age / 60)) min)" >> "$RUNNER_TEMP/rescued"
+            # A manual digest may have used `only`; don't re-send it to everyone.
             if [ "$wf" = digest.yml ] && [ "$event" = workflow_dispatch ]; then
-              # A manual digest may have had --only; don't re-send it to everyone.
-              echo "Cancelled manual digest run $id; re-run it with runner=hosted if needed."
+              echo "Not re-dispatching manual digest run $id; re-run it with runner=hosted if needed."
             else
-              gh workflow run "$wf" --ref "${{ github.event.repository.default_branch }}" -f runner=hosted
-              echo "Re-dispatched $wf on GitHub-hosted runner."
+              dispatch[$wf]=1
             fi
-            echo "$wf ($event, run $id)" >> "$RUNNER_TEMP/rescued"
+          done < "$RUNNER_TEMP/waiting"
+          for wf in "${!dispatch[@]}"; do
+            gh workflow run "$wf" --ref "${{ github.event.repository.default_branch }}" -f runner=hosted
+            echo "Re-dispatched $wf on a GitHub-hosted runner."
           done
 
       - name: Open or close the alert issue

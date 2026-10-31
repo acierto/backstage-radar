@@ -64,6 +64,18 @@ the host adds these secrets: `SMTP_URL` (e.g. `smtps://user:app-password@smtp.gm
 `MAIL_FROM`, and optionally `SUBSCRIBER_EMAILS` (`{"login": "address"}`; otherwise the public profile
 email is used).
 
+### CI runner
+
+Jobs run on a self-hosted ARM64 runner (`agents-runner`, Oracle VM, labels `self-hosted, linux, ARM64, oracle`).
+`scripts/setup-oracle-runner.sh` installs or repairs it (idempotent; `--reregister` to register again). It also
+sets systemd `Restart=always`, memory limits (the VM is shared) and a weekly cleanup timer.
+
+If the runner is down, **Runner watchdog** (every 15 min, GitHub-hosted) cancels Oracle jobs queued for more than
+10 minutes, re-dispatches them with `runner: hosted`, and keeps a `runner-offline` issue open until a job
+completes on `agents-runner` again. To force a hosted run: **Run workflow → runner: hosted**.
+
+Because the repo is public, never add `pull_request` triggers to these workflows: fork PRs would run on the VM.
+
 ## Joining (for everyone else)
 
 * **Dashboard only:** just open the URL. Nothing to sign up for.
