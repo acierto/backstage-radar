@@ -7,42 +7,55 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230b1622'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2337d4c4' stroke-width='1.5'/%3E%3Cpath d='M16 16 L27 9' stroke='%2337d4c4' stroke-width='2'/%3E%3Ccircle cx='21' cy='20' r='2.5' fill='%23ff6a4d'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23171b23'/%3E%3Crect x='7' y='9' width='18' height='3' rx='1.5' fill='%233987e5'/%3E%3Crect x='7' y='15' width='12' height='3' rx='1.5' fill='%239085e9'/%3E%3Crect x='7' y='21' width='7' height='3' rx='1.5' fill='%23199e70'/%3E%3C/svg%3E">
 <style>
-  /* Layout: control-room console. Identity bar → "who is waiting" + radar scope → strip board → area pulse. Dark-first. */
+  /* Layout: identity bar → "who is waiting" lanes next to an area summary → strip board → area pulse. Calm neutrals, color only for the kind of ask. */
   :root {
-    color-scheme: dark;
-    --bg: #08111b; --panel: #0e1a27; --panel-2: #132233; --line: #1f3246; --line-2: #2a4259;
-    --ink: #e8f0f7; --ink-2: #9fb3c6; --ink-3: #6a8197;
-    --scope: #37d4c4;          /* radar phosphor, the accent */
-    --scope-dim: rgba(55,212,196,.16);
-    --ping: #ff6a4d;           /* someone is waiting on you */
-    --rereview: #f5b83d;       /* changes since your review */
-    --review: #6aa8ff;         /* review requested */
-    --fresh: #b78cff;          /* new in your area */
-    --calm: #4c6680;           /* waiting on others / backlog */
-    --heat-0: #122131; --heat-1: #12403f; --heat-2: #146b63; --heat-3: #1c9a8b; --heat-4: #37d4c4;
+    color-scheme: light;
+    --bg: #f3f4f7; --panel: #ffffff; --panel-2: #f7f8fa; --line: #e3e6ec; --line-2: #cdd2db;
+    --ink: #121826; --ink-2: #4b5466; --ink-3: #7b8394;
+    --accent: #2a5bd7;                         /* UI accent: selection, focus, links */
+    --review: #2a78d6;   --review-ink: #1c5cab;
+    --rereview: #1baf7a; --rereview-ink: #0b7a55;
+    --question: #6250d6; --question-ink: #4a3aa7;
+    --fresh: #eda100;    --fresh-ink: #8a5d00;
+    --calm: #aab1bd;     --calm-ink: #5d6575;
+    --overdue: #b26a00;  --overdue-wash: #fff3dc;
+    --track: #eef0f4;
+    --heat-0: #eef0f4; --heat-1: #cde2fb; --heat-2: #86b6ef; --heat-3: #3987e5; --heat-4: #1c5cab;
     --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
     --font-body: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      color-scheme: light;
-      --bg: #eef3f7; --panel: #ffffff; --panel-2: #f4f8fb; --line: #d9e3ec; --line-2: #c3d2df;
-      --ink: #0b1622; --ink-2: #44586b; --ink-3: #6f8397;
-      --scope: #0f8f84; --scope-dim: rgba(15,143,132,.12);
-      --ping: #e2472a; --rereview: #b97800; --review: #2f6fd6; --fresh: #7a4fd6; --calm: #8aa0b4;
-      --heat-0: #e6edf3; --heat-1: #bfe3dd; --heat-2: #7ccabf; --heat-3: #2fa597; --heat-4: #0f7a70;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1218; --panel: #171b23; --panel-2: #1d222c; --line: #262c38; --line-2: #343c4b;
+      --ink: #e9ecf2; --ink-2: #a9b1c0; --ink-3: #77808f;
+      --accent: #6f9cf5;
+      --review: #3987e5;   --review-ink: #86b6ef;
+      --rereview: #199e70; --rereview-ink: #4fd1a1;
+      --question: #9085e9; --question-ink: #b7aef3;
+      --fresh: #c98500;    --fresh-ink: #f0b84a;
+      --calm: #4a5262;     --calm-ink: #9aa3b2;
+      --overdue: #f0b84a;  --overdue-wash: #2d2410;
+      --track: #222833;
+      --heat-0: #1f2530; --heat-1: #104281; --heat-2: #1c5cab; --heat-3: #3987e5; --heat-4: #86b6ef;
     }
   }
-  :root[data-theme="light"] {
-    color-scheme: light;
-    --bg: #eef3f7; --panel: #ffffff; --panel-2: #f4f8fb; --line: #d9e3ec; --line-2: #c3d2df;
-    --ink: #0b1622; --ink-2: #44586b; --ink-3: #6f8397;
-    --scope: #0f8f84; --scope-dim: rgba(15,143,132,.12);
-    --ping: #e2472a; --rereview: #b97800; --review: #2f6fd6; --fresh: #7a4fd6; --calm: #8aa0b4;
-    --heat-0: #e6edf3; --heat-1: #bfe3dd; --heat-2: #7ccabf; --heat-3: #2fa597; --heat-4: #0f7a70;
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1d222c; --line: #262c38; --line-2: #343c4b;
+    --ink: #e9ecf2; --ink-2: #a9b1c0; --ink-3: #77808f;
+    --accent: #6f9cf5;
+    --review: #3987e5;   --review-ink: #86b6ef;
+    --rereview: #199e70; --rereview-ink: #4fd1a1;
+    --question: #9085e9; --question-ink: #b7aef3;
+    --fresh: #c98500;    --fresh-ink: #f0b84a;
+    --calm: #4a5262;     --calm-ink: #9aa3b2;
+    --overdue: #f0b84a;  --overdue-wash: #2d2410;
+    --track: #222833;
+    --heat-0: #1f2530; --heat-1: #104281; --heat-2: #1c5cab; --heat-3: #3987e5; --heat-4: #86b6ef;
   }
 
   * { box-sizing: border-box; }
@@ -50,121 +63,132 @@
   body { margin: 0; color: var(--ink); font: 15px/1.45 var(--font-body); -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
   button, input { font: inherit; color: inherit; }
-  :focus-visible { outline: 2px solid var(--scope); outline-offset: 2px; border-radius: 4px; }
-  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   .wrap { max-width: 1240px; margin: 0 auto; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
   /* ---------- identity bar ---------- */
-  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 11; background: var(--bg); }
-  .bar-in { max-width: 1240px; margin: 0 auto; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
-  .brand { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
-  .brand svg { flex: none; }
+  .bar-in, .areas-row { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .bar-in { padding-block: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; }
   .brand small { font: 400 12px var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
-  .iam { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 6px 4px 6px; }
-  .iam img, .iam .ph { width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); flex: none; }
+  .iam { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 8px 4px 5px; }
+  .iam img, .iam .ph { width: 26px; height: 26px; border-radius: 50%; flex: none; }
   .iam label { font-size: 12px; color: var(--ink-3); }
-  .iam input { background: transparent; border: 0; width: 130px; font: 600 14px var(--font-mono); padding: 2px 4px; }
+  .iam input { background: transparent; border: 0; width: 130px; font: 600 14px var(--font-mono); padding: 2px 2px; }
   .iam input::placeholder { color: var(--ink-3); font-weight: 400; }
   .bar .spacer { flex: 1; }
-  .fresh { font: 12px var(--font-mono); color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
-  .fresh i { width: 7px; height: 7px; border-radius: 50%; background: var(--scope); box-shadow: 0 0 0 3px var(--scope-dim); }
-  .fresh.stale i { background: var(--ping); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ping) 25%, transparent); }
+  .fresh { font: 12px var(--font-mono); color: var(--ink-3); }
+  .fresh.stale { color: var(--overdue); }
   .icon-btn { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
-  .icon-btn:hover { border-color: var(--scope); }
-
-  .areas-row { max-width: 1240px; margin: 0 auto; padding-block: 0 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: 10px; }
+  .icon-btn:hover { border-color: var(--accent); }
+  .areas-row { padding-block: 0 10px; display: flex; align-items: center; gap: 10px; }
   .areas-row > span { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); flex: none; }
   .areas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; min-width: 0; }
   .areas::-webkit-scrollbar { display: none; }
-  .area { flex: none; cursor: pointer; border: 1px solid var(--line-2); background: transparent; border-radius: 6px; padding: 3px 10px; font: 500 13px var(--font-mono); color: var(--ink-2); }
-  .area:hover { border-color: var(--scope); color: var(--ink); }
-  .area[aria-pressed="true"] { background: var(--scope); border-color: var(--scope); color: var(--bg); font-weight: 600; }
-  .area.all[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); }
+  .area { flex: none; cursor: pointer; border: 1px solid var(--line-2); background: var(--panel); border-radius: 6px; padding: 3px 10px; font: 500 13px var(--font-mono); color: var(--ink-2); }
+  .area:hover { border-color: var(--accent); color: var(--ink); }
+  .area[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 600; }
   .teams { flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
   .teams input { width: 190px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 8px; font: 13px var(--font-mono); }
 
   /* ---------- hero ---------- */
-  .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 28px; padding-block: 28px 8px; align-items: start; }
-  .eyebrow { font: 600 11px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--scope); display: flex; align-items: center; gap: 8px; }
-  .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1.6s infinite; }
-  .headline { font: 800 clamp(34px, 5.2vw, 60px)/1.0 var(--font-display); letter-spacing: -0.03em; margin: 10px 0 10px; text-wrap: balance; }
-  .headline em { font-style: normal; color: var(--ping); }
-  .headline.calm em { color: var(--scope); }
-  .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; color: var(--ink-2); font-size: 14px; margin-bottom: 18px; }
-  .stats b { color: var(--ink); font-weight: 600; }
-  .stats .spark { display: inline-flex; align-items: center; gap: 8px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 28px; padding-block: 28px 0; align-items: start; }
+  .eyebrow { font: 600 11px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+  .headline { font: 800 clamp(30px, 3.4vw, 44px)/1.04 var(--font-display); letter-spacing: -0.03em; margin: 8px 0 12px; text-wrap: balance; }
+  .headline em { font-style: normal; color: var(--accent); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font: 600 22px/1.1 var(--font-mono); }
+  .stat span { font-size: 12px; color: var(--ink-2); }
+  .stat.warn { background: var(--overdue-wash); border-color: transparent; }
+  .stat.warn b { color: var(--overdue); }
+  .stat svg { display: block; margin-top: 4px; }
 
-  .people { display: flex; flex-direction: column; gap: 8px; }
-  .person { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; text-decoration: none; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--c, var(--ping)); border-radius: 10px; padding: 10px 14px 10px 10px; transition: transform .15s, border-color .15s; }
-  .person:hover { transform: translateX(3px); border-color: var(--c, var(--ping)); }
-  .person img, .person .ph { width: 44px; height: 44px; border-radius: 50%; background: var(--panel-2); object-fit: cover; }
-  .ph { display: grid; place-items: center; font: 700 15px var(--font-mono); color: var(--ink-2); }
-  .person .who { font-weight: 600; font-size: 15px; }
-  .person .who span { color: var(--c); font-weight: 600; }
-  .person .what { color: var(--ink-2); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .person .what .n { font-family: var(--font-mono); color: var(--ink-3); }
-  .person .wait { text-align: right; }
-  .person .wait b { display: block; font: 600 20px/1 var(--font-mono); color: var(--c); }
-  .person .wait small { font-size: 11px; color: var(--ink-3); }
-  .person.more { border-left-color: var(--line-2); grid-template-columns: 1fr; text-align: center; color: var(--ink-2); font-size: 13px; cursor: pointer; }
-  .allclear { background: var(--panel); border: 1px dashed var(--line-2); border-radius: 12px; padding: 22px; color: var(--ink-2); }
+  .summary h3 { font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
+  .summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .summary li button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 7px 8px; cursor: pointer; }
+  .summary li button:hover { background: var(--panel); }
+  .summary li b { font: 600 15px var(--font-mono); }
+  .summary li .bar-mini { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
+  .summary li .bar-mini i { display: block; height: 100%; border-radius: 2px; background: var(--c); }
 
-  /* radar */
-  .scope-card { background: radial-gradient(circle at 50% 46%, var(--panel-2), var(--panel) 70%); border: 1px solid var(--line); border-radius: 18px; padding: 16px; position: relative; }
-  .scope-wrap { position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 1 / 1; }
-  .scope-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .sweep { position: absolute; inset: 7%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg, transparent 300deg, var(--scope-dim) 345deg, color-mix(in srgb, var(--scope) 38%, transparent) 360deg); animation: spin 6s linear infinite; pointer-events: none; mix-blend-mode: screen; }
-  :root[data-theme="light"] .sweep { mix-blend-mode: multiply; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sweep { mix-blend-mode: multiply; } }
-  .blip { cursor: pointer; }
-  .blip .halo { animation: pulse 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-  .blip:hover .core { stroke: var(--ink); stroke-width: 2; }
-  .scope-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
-  .scope-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pulse { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(3.2); opacity: 0; } }
-  @keyframes blink { 50% { opacity: .25; } }
-  @media (prefers-reduced-motion: reduce) { .sweep, .blip .halo, .eyebrow::before { animation: none; } .person { transition: none; } }
+  /* waiting lanes */
+  .lanes { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; }
+  .lanes-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 4px; }
+  .lanes-h h2 { margin: 0; font: 800 20px var(--font-display); letter-spacing: -0.01em; }
+  .lanes-h p { margin: 0; font-size: 13px; color: var(--ink-2); }
+  .key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0 4px; }
+  .key i { display: inline-block; width: 14px; height: 6px; border-radius: 3px; margin-right: 6px; vertical-align: 2px; }
+  .axis, .lane { display: grid; grid-template-columns: minmax(0, 270px) minmax(0, 1fr) 64px; gap: 14px; align-items: center; }
+  .axis { font: 11px var(--font-mono); color: var(--ink-3); padding: 6px 0 4px; }
+  .axis .ticks { position: relative; height: 14px; }
+  .axis .ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+  .axis .ticks span:last-child { transform: translateX(-100%); }
+  .lane { text-decoration: none; padding: 8px 0; border-top: 1px solid var(--line); }
+  .lane:hover .who-name { color: var(--accent); }
+  .lane .id { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; min-width: 0; }
+  .lane img, .lane .ph { width: 34px; height: 34px; border-radius: 50%; }
+  .who-name { font-weight: 600; font-size: 14px; }
+  .who-act { font: 600 11px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--c-ink); margin-left: 6px; }
+  .lane .ttl { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lane .ttl .n { font-family: var(--font-mono); color: var(--ink-3); }
+  .track { position: relative; height: 22px; background: linear-gradient(var(--track), var(--track)) center / 100% 2px no-repeat; }
+  .track .grid { position: absolute; top: 2px; bottom: 2px; width: 1px; background: var(--line); }
+  .track .span { position: absolute; top: 5px; height: 12px; border-radius: 6px; background: var(--c); opacity: .9; }
+  .track .start { position: absolute; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--panel); border: 3px solid var(--c); transform: translateX(-50%); }
+  .lane .age { text-align: right; font: 600 16px var(--font-mono); }
+  .lane .age small { display: block; font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .lane .age.over { color: var(--overdue); }
+  .lane .age.over small { color: var(--overdue); }
+  .lanes .more { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink-2); font-size: 13px; cursor: pointer; }
+  .lanes .more:hover { color: var(--accent); }
+  .allclear { padding: 26px 8px; color: var(--ink-2); }
+  .allclear b { color: var(--ink); }
+  .ph { display: grid; place-items: center; font: 700 12px var(--font-mono); color: var(--ink-2); background: var(--panel-2); border: 1px solid var(--line); }
 
   /* ---------- strip board ---------- */
   .section-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 40px 0 12px; }
-  .section-h h2 { font: 800 26px/1.1 var(--font-display); letter-spacing: -0.02em; margin: 0; }
+  .section-h h2 { font: 800 24px/1.1 var(--font-display); letter-spacing: -0.02em; margin: 0; }
   .section-h p { margin: 0; color: var(--ink-2); font-size: 14px; }
   .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab { flex: none; display: flex; align-items: baseline; gap: 8px; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; color: var(--ink-2); }
-  .tab b { font: 600 18px var(--font-mono); color: var(--ink); }
-  .tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); align-self: center; }
-  .tab[aria-selected="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--panel)); color: var(--ink); }
+  .tab b { font: 600 17px var(--font-mono); color: var(--ink); }
+  .tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); }
   .board-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 12px 0 10px; font-size: 12px; color: var(--ink-3); }
   .board-tools .spacer { flex: 1; }
   .board-tools input[type=search] { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; width: 240px; font-size: 13px; }
   .board-tools label { display: inline-flex; gap: 6px; align-items: center; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--accent); color: var(--ink); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12px; }
+  .filter-chip button { border: 0; background: transparent; cursor: pointer; color: var(--ink-2); padding: 0 6px; }
   kbd { font: 11px var(--font-mono); border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--ink-2); }
 
   .strips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  .strip { display: grid; grid-template-columns: 96px minmax(0, 1fr) 150px 92px; align-items: stretch; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .strip.sel { border-color: var(--scope); box-shadow: 0 0 0 1px var(--scope); }
+  .strip { display: grid; grid-template-columns: 6px 86px minmax(0, 1fr) 160px 84px; align-items: stretch; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .strip.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .strip.done { opacity: .45; }
   .strip > * { padding: 10px 12px; min-width: 0; }
-  .cs { background: color-mix(in srgb, var(--c) 16%, var(--panel)); border-right: 2px dashed color-mix(in srgb, var(--c) 45%, transparent); display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-  .cs b { font: 600 15px var(--font-mono); color: var(--c); }
+  .strip > .edge { padding: 0; background: var(--c); }
+  .cs { display: flex; flex-direction: column; justify-content: center; gap: 2px; border-right: 1px dashed var(--line-2); }
+  .cs b { font: 600 14px var(--font-mono); }
   .cs small { font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
   .st a { text-decoration: none; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .st a:hover { color: var(--scope); }
+  .st a:hover { color: var(--accent); }
   .st .m { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: var(--ink-2); align-items: center; }
-  .act { font: 600 11px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--c); }
+  .act { font: 600 11px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--c-ink); }
   .chip { font: 11px var(--font-mono); padding: 0 6px; border-radius: 4px; border: 1px solid var(--line-2); color: var(--ink-3); }
-  .newtag { font: 600 10px var(--font-mono); letter-spacing: .1em; color: var(--bg); background: var(--ping); border-radius: 3px; padding: 0 5px; }
+  .newtag { font: 600 10px var(--font-mono); letter-spacing: .1em; color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 0 4px; }
   .from { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--line); font-size: 13px; }
-  .from img, .from .ph { width: 26px; height: 26px; border-radius: 50%; flex: none; font-size: 11px; background: var(--panel-2); }
+  .from img, .from .ph { width: 24px; height: 24px; border-radius: 50%; flex: none; font-size: 10px; }
   .from span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tm { border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; }
-  .tm b { font: 600 17px/1 var(--font-mono); }
-  .tm b.old { color: var(--ping); }
+  .tm b { font: 600 15px/1 var(--font-mono); }
+  .tm b.over { color: var(--overdue); }
   .tm button { background: transparent; border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 8px; font-size: 11px; color: var(--ink-2); cursor: pointer; }
-  .tm button:hover { border-color: var(--scope); color: var(--ink); }
+  .tm button:hover { border-color: var(--accent); color: var(--ink); }
   .empty-board { padding: 26px; text-align: center; color: var(--ink-2); background: var(--panel); border: 1px dashed var(--line-2); border-radius: 10px; }
   .more-btn { margin: 10px auto 0; display: block; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
 
@@ -175,23 +199,29 @@
   .ramp { display: inline-flex; gap: 2px; vertical-align: middle; margin: 0 6px; }
   .ramp i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
-  .tip { position: fixed; z-index: 30; pointer-events: none; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .tip { position: fixed; z-index: 30; pointer-events: none; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
   .tip b { display: block; font-size: 13px; margin-bottom: 2px; }
   .tip .k { color: var(--ink-3); font-family: var(--font-mono); }
   footer { margin-top: 36px; color: var(--ink-3); font-size: 12px; }
   footer a { color: var(--ink-2); }
 
-  @media (max-width: 920px) {
-    .hero { grid-template-columns: 1fr; }
-    .scope-wrap { max-width: 380px; }
-    .strip { grid-template-columns: 78px minmax(0, 1fr) 82px; }
+  @media (max-width: 940px) {
+    .hero { display: flex; flex-direction: column; gap: 22px; }
+    .hero > .side { display: contents; }
+    .hero .intro { order: 1; } .hero .lanes { order: 2; } .hero .summary { order: 3; width: 100%; }
+    .hero .stats { margin-bottom: 0; }
+    .axis, .lane { grid-template-columns: minmax(0, 200px) minmax(0, 1fr) 56px; }
+    .strip { grid-template-columns: 6px 74px minmax(0, 1fr) 80px; }
     .strip .from { display: none; }
   }
-  @media (max-width: 560px) {
+  @media (max-width: 600px) {
     .bar { position: static; }
     .teams { display: none; }
     .areas-row { flex-wrap: wrap; }
     .iam input { width: 110px; }
+    .axis { display: none; }
+    .lane { grid-template-columns: minmax(0, 1fr) 56px; }
+    .lane .track { grid-column: 1 / -1; grid-row: 2; }
     .board-tools input[type=search] { width: 100%; }
     .board-tools .keys { display: none; }
   }
@@ -201,7 +231,7 @@
 <header class="bar">
   <div class="bar-in">
     <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-opacity=".35"/><circle cx="16" cy="16" r="8" fill="none" stroke="currentColor" stroke-opacity=".35"/><path d="M16 16 L28 9" stroke="var(--scope)" stroke-width="2.2" stroke-linecap="round"/><circle cx="22" cy="21" r="2.6" fill="var(--ping)"/></svg>
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--ink)"/><rect x="7" y="9" width="18" height="3" rx="1.5" fill="var(--review)"/><rect x="7" y="15" width="12" height="3" rx="1.5" fill="var(--question)"/><rect x="7" y="21" width="7" height="3" rx="1.5" fill="var(--rereview)"/></svg>
       Radar <small id="repo">backstage/backstage</small>
     </div>
     <div class="iam">
@@ -210,7 +240,7 @@
       <input id="user" placeholder="your-login" autocomplete="off" spellcheck="false">
     </div>
     <span class="spacer"></span>
-    <span class="fresh" id="fresh"><i></i>loading…</span>
+    <span class="fresh" id="fresh">loading…</span>
     <button class="icon-btn" id="share">Copy my link</button>
     <button class="icon-btn" id="theme" aria-label="Switch light or dark">◐</button>
   </div>
@@ -235,7 +265,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
 };
 const csv = (s) => (s || '').split(',').map((x) => x.trim().toLowerCase().replace(/^@?[\w-]+\//, '')).filter(Boolean);
-const NEW_DAYS = 7;
+const NEW_DAYS = 7, OVERDUE_DAYS = 7;
 
 // ---------------- state ----------------
 const params = new URLSearchParams(location.search);
@@ -244,7 +274,7 @@ const state = {
   user: lc(params.get('user') || saved.user || ''),
   areas: params.has('areas') ? csv(params.get('areas')) : saved.areas || [],
   teams: params.has('teams') ? csv(params.get('teams')) : saved.teams || [],
-  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0,
+  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7,
 };
 let data = null, rows = [], boardRows = [], lastVisit = null;
 
@@ -259,29 +289,26 @@ function savePrefs() {
 function readVisit() {
   const key = `radar:lastVisit:${state.user}`;
   lastVisit = store.get(key, null);
-  // Only move the marker forward after 20 minutes, so reloads don't wipe "new since last visit".
+  // Move the marker only after 20 minutes so reloads don't wipe "new since last visit".
   if (!lastVisit || Date.now() - Date.parse(lastVisit) > 20 * 60000) store.set(key, new Date().toISOString());
 }
 
 // ---------------- model ----------------
 const TABS = {
-  reply:    { label: 'Waiting on you', c: '--ping' },
-  mine:     { label: 'Replies on yours', c: '--review' },
-  fresh:    { label: 'New this week', c: '--fresh' },
-  activity: { label: 'Replied after you', c: '--rereview' },
-  waiting:  { label: 'Ball in their court', c: '--calm' },
-  backlog:  { label: 'Backlog', c: '--calm' },
+  reply: 'Waiting on you', mine: 'Replies on yours', fresh: 'New this week',
+  activity: 'Replied after you', waiting: 'Their move', backlog: 'Backlog',
 };
 const ORDER = Object.keys(TABS);
 const ACTION = {
-  changes:  { label: 'Re-review', verb: 'wants a re-review', c: '--rereview' },
-  review:   { label: 'Review', verb: 'asked for your review', c: '--review' },
-  question: { label: 'Question', verb: 'is asking you', c: '--ping' },
-  reply:    { label: 'New reply', verb: 'replied', c: '--review' },
-  newpr:    { label: 'New PR', verb: 'opened a PR', c: '--fresh' },
-  newissue: { label: 'New issue', verb: 'opened an issue', c: '--fresh' },
-  waiting:  { label: 'Waiting', verb: 'owes a reply', c: '--calm' },
+  changes:  { label: 'Re-review', verb: 'wants a re-review', c: 'rereview' },
+  review:   { label: 'Review', verb: 'asked for your review', c: 'review' },
+  question: { label: 'Question', verb: 'is asking you', c: 'question' },
+  reply:    { label: 'New reply', verb: 'replied', c: 'review' },
+  newpr:    { label: 'New PR', verb: 'opened a PR', c: 'fresh' },
+  newissue: { label: 'New issue', verb: 'opened an issue', c: 'fresh' },
+  waiting:  { label: 'Their move', verb: 'owes a reply', c: 'calm' },
 };
+const colorVars = (a) => `--c:var(--${ACTION[a].c});--c-ink:var(--${ACTION[a].c}-ink)`;
 const lastEventAt = (i) => (i.ev.length ? i.ev[i.ev.length - 1][0] : i.created);
 
 function analyse(item, bucket, user) {
@@ -315,11 +342,8 @@ function build(now) {
     for (const [at, actor] of item.ev) if (lc(actor) === prefs.user) myLast = at;
     out.push({ item, bucket, since: c.since, action, who, myLast, last: lastEventAt(item), done: isDone(item) });
   }
-  const pri = { changes: 0, review: 1, question: 2 };
   out.sort((a, b) => ORDER.indexOf(a.bucket) - ORDER.indexOf(b.bucket)
-    || (a.bucket === 'reply' ? (a.since < b.since ? -1 : 1) : 0)
-    || (pri[a.action] ?? 9) - (pri[b.action] ?? 9)
-    || (a.bucket === 'backlog' ? (a.since < b.since ? -1 : 1) : (b.since > a.since ? 1 : -1)));
+    || (['reply', 'mine', 'backlog'].includes(a.bucket) ? (a.since < b.since ? -1 : 1) : (b.last > a.last ? 1 : -1)));
   return out;
 }
 
@@ -342,7 +366,7 @@ const avatar = (login, size) => {
   if (!login || /\[bot\]$/.test(login)) return `<span class="ph">${ini}</span>`;
   return `<img src="https://github.com/${encodeURIComponent(login)}.png?size=${size * 2}" alt="" width="${size}" height="${size}" loading="lazy" onerror="this.outerHTML='<span class=&quot;ph&quot;>${ini}</span>'">`;
 };
-const ageParts = (since, now) => { const s = humanAge(since, now); return { v: s.replace(/[a-z]+$/, ''), u: { m: 'min', h: 'hours', d: 'days', w: 'weeks' }[s.replace(/^\d+/, '')] || '' }; };
+const ageWords = (since, now) => { const s = humanAge(since, now); return { v: s.replace(/[a-z]+$/, ''), u: { m: 'min', h: 'hours', d: 'days', w: 'weeks' }[s.replace(/^\d+/, '')] || '' }; };
 const tip = $('#tip');
 function showTip(e, html) {
   tip.innerHTML = html; tip.hidden = false;
@@ -353,13 +377,12 @@ function showTip(e, html) {
   tip.style.left = `${x}px`; tip.style.top = `${y}px`;
 }
 const hideTip = () => { tip.hidden = true; };
-function hash(n) { let x = Math.imul(n, 2654435761) >>> 0; x = (x ^ (x >>> 13)) >>> 0; return (x % 1000) / 1000; }
 
 // ---------------- identity bar ----------------
 { const t = store.get('radar:theme', null); if (t) document.documentElement.dataset.theme = t; }
 $('#theme').onclick = () => {
-  const light = matchMedia('(prefers-color-scheme: light)').matches;
-  const cur = document.documentElement.dataset.theme || (light ? 'light' : 'dark');
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
   document.documentElement.dataset.theme = cur === 'dark' ? 'light' : 'dark';
   store.set('radar:theme', document.documentElement.dataset.theme);
   render();
@@ -371,10 +394,7 @@ $('#share').onclick = async () => {
 };
 const userEl = $('#user'), teamsEl = $('#teams');
 userEl.value = state.user; teamsEl.value = state.teams.join(', ');
-function paintMe() {
-  const ph = $('#me-ph');
-  ph.outerHTML = state.user ? `<span id="me-ph" style="display:contents">${avatar(state.user, 26)}</span>` : '<span class="ph" id="me-ph" aria-hidden="true"></span>';
-}
+function paintMe() { $('#me-ph').outerHTML = `<span id="me-ph" style="display:contents">${state.user ? avatar(state.user, 26) : '<span class="ph"></span>'}</span>`; }
 let typing;
 userEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc(userEl.value.trim().replace(/^@/, '')); savePrefs(); readVisit(); paintMe(); render(); }, 400); };
 teamsEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.teams = csv(teamsEl.value); savePrefs(); render(); }, 400); };
@@ -383,78 +403,119 @@ function renderAreas() {
   const all = state.areas.includes('all');
   const sel = data.areas.filter((a) => !all && state.areas.includes(a));
   const rest = data.areas.filter((a) => all || !state.areas.includes(a));
-  $('#areas').innerHTML = [`<button class="area all" data-a="all" aria-pressed="${all}">all areas</button>`]
+  $('#areas').innerHTML = [`<button class="area" data-a="all" aria-pressed="${all}">all areas</button>`]
     .concat([...sel, ...rest].map((a) => `<button class="area" data-a="${esc(a)}" aria-pressed="${!all && state.areas.includes(a)}">${esc(a)}</button>`)).join('');
   $('#areas').onclick = (e) => {
     const a = e.target.closest('.area')?.dataset.a; if (!a) return;
     if (a === 'all') state.areas = all ? [] : ['all'];
     else { const s = new Set(state.areas.filter((x) => x !== 'all')); s.has(a) ? s.delete(a) : s.add(a); state.areas = [...s]; }
-    savePrefs(); render();
+    state.filter = null; savePrefs(); render();
   };
 }
 
-// ---------------- radar scope ----------------
-const QUADS = [
-  { key: 'reply', label: 'WAITING ON YOU', start: -90 },
-  { key: 'mine', label: 'FOLLOW-UPS', start: 0, also: ['activity'] },
-  { key: 'fresh', label: 'NEW IN AREA', start: 90 },
-  { key: 'waiting', label: 'THEIR MOVE', start: 180 },
-];
-function scope(el, now) {
-  const S = 520, C = S / 2, R = C * 0.86;
-  const RINGS = [{ d: 1, l: '1d' }, { d: 7, l: '1w' }, { d: 28, l: '4w' }, { d: 90, l: '3m' }];
-  const rr = (days) => R * Math.min(1, Math.log1p(Math.max(days, 0.02)) / Math.log1p(90));
-  const scopeC = css('--scope'), line = css('--line-2'), ink3 = css('--ink-3');
-  let g = '';
-  // quadrant wash for "waiting on you"
-  g += `<path d="M${C},${C} L${C},${C - R} A${R},${R} 0 0 1 ${C + R},${C} Z" fill="${css('--ping')}" opacity="0.06"/>`;
-  for (const ring of RINGS) {
-    const r = rr(ring.d);
-    g += `<circle cx="${C}" cy="${C}" r="${r}" fill="none" stroke="${line}" stroke-dasharray="${ring.d === 90 ? '' : '2 5'}"/>`;
-    g += `<text x="${C + 4}" y="${C - r + 13}" font-size="11" fill="${ink3}" style="font-family:var(--font-mono)">${ring.l}</text>`;
-  }
-  g += `<line x1="${C - R}" y1="${C}" x2="${C + R}" y2="${C}" stroke="${line}"/><line x1="${C}" y1="${C - R}" x2="${C}" y2="${C + R}" stroke="${line}"/>`;
-  const labelPos = [[C + R * 0.72, C - R - 10, 'middle'], [C + R * 0.72, C + R + 20, 'middle'], [C - R * 0.72, C + R + 20, 'middle'], [C - R * 0.72, C - R - 10, 'middle']];
-  QUADS.forEach((q, i) => {
-    const n = rows.filter((r) => !r.done && (r.bucket === q.key || (q.also || []).includes(r.bucket))).length;
-    const [x, y, a] = labelPos[i];
-    g += `<text x="${x}" y="${y}" text-anchor="${a}" font-size="11" letter-spacing="1.5" font-weight="600" style="font-family:var(--font-mono)" fill="${i === 0 ? css('--ping') : ink3}">${q.label} · ${n}</text>`;
-  });
-  // you, at the center
-  g += `<circle cx="${C}" cy="${C}" r="16" fill="${css('--panel')}" stroke="${scopeC}" stroke-width="2"/>`;
-  g += `<clipPath id="me-clip"><circle cx="${C}" cy="${C}" r="14"/></clipPath>`;
-  if (state.user) g += `<image href="https://github.com/${encodeURIComponent(state.user)}.png?size=64" x="${C - 14}" y="${C - 14}" width="28" height="28" clip-path="url(#me-clip)"/>`;
+// ---------------- waiting lanes ----------------
+// Shared time axis, log-scaled so a 2-hour ping and a 10-week ping are both readable. Right edge = now.
+const AXIS_DAYS = 120;
+const xPos = (days) => 100 * (1 - Math.log1p(Math.max(0, days)) / Math.log1p(AXIS_DAYS));
+const TICKS = [[AXIS_DAYS, '4 months'], [28, '4w'], [7, '1w'], [1, '1d'], [0, 'now']];
 
-  const blips = [];
-  for (const r of rows) {
-    if (r.done) continue;
-    const q = QUADS.find((qq) => qq.key === r.bucket || (qq.also || []).includes(r.bucket));
-    if (!q) continue;
-    const days = (now - Date.parse(r.bucket === 'reply' ? r.since : r.last)) / DAY;
-    const ang = (q.start + 8 + hash(r.item.n) * 74) * Math.PI / 180;
-    const rad = rr(days);
-    blips.push({ r, x: C + rad * Math.cos(ang), y: C + rad * Math.sin(ang), days });
+function lanes(now) {
+  const waiting = rows.filter((r) => r.bucket === 'reply' && !r.done);
+  if (!waiting.length) {
+    return `<div class="lanes"><div class="lanes-h"><h2>Nobody is waiting on you</h2></div>
+      <div class="allclear">Every ping is answered. <b>${rows.filter((r) => r.bucket === 'fresh' && !r.done).length}</b> new items in your areas are on the board below.</div></div>`;
   }
-  // older first so fresh blips sit on top
-  blips.sort((a, b) => b.days - a.days);
-  for (const [i, b] of blips.entries()) {
-    const c = css(ACTION[b.r.action].c);
-    const hot = b.r.bucket === 'reply';
-    const size = hot ? 7 : b.r.bucket === 'waiting' ? 3.5 : 5;
-    g += `<a href="${esc(b.r.item.url)}" target="_blank" rel="noopener" aria-label="#${b.r.item.n} ${esc(b.r.item.title)}"><g class="blip" data-i="${i}">${hot ? `<circle class="halo" cx="${b.x}" cy="${b.y}" r="${size}" fill="none" stroke="${c}" stroke-width="2" style="animation-delay:${(hash(b.r.item.n) * 2).toFixed(2)}s"/>` : ''}
-      <circle class="core" cx="${b.x}" cy="${b.y}" r="${size}" fill="${c}" ${b.r.bucket === 'waiting' ? 'opacity="0.55"' : ''}/>
-      <circle cx="${b.x}" cy="${b.y}" r="${Math.max(12, size + 6)}" fill="transparent"/></g></a>`;
+  const kinds = ['question', 'changes', 'review'].filter((k) => waiting.some((r) => r.action === k));
+  const shown = waiting.slice(0, state.laneLimit);
+  const grid = TICKS.slice(1, -1).map(([d]) => `<span class="grid" style="left:${xPos(d)}%"></span>`).join('');
+  const lane = (r) => {
+    const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = days > OVERDUE_DAYS;
+    const left = xPos(days);
+    return `<a class="lane" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}">
+      <div class="id">${avatar(r.who, 34)}<div style="min-width:0"><div><span class="who-name">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
+        <div class="ttl"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}</div></div></div>
+      <div class="track">${grid}<span class="span" style="left:${left}%;right:0"></span><span class="start" style="left:${left}%"></span></div>
+      <div class="age ${over ? 'over' : ''}">${w.v}<small>${over ? 'overdue' : w.u}</small></div></a>`;
+  };
+  return `<div class="lanes">
+    <div class="lanes-h"><h2>Who is waiting</h2><p>Oldest first. The bar runs from when they asked to now.</p></div>
+    <div class="key">${kinds.map((k) => `<span><i style="background:var(--${ACTION[k].c})"></i>${ACTION[k].label}</span>`).join('')}<span>· overdue after ${OVERDUE_DAYS} days</span></div>
+    <div class="axis"><span></span><div class="ticks">${TICKS.map(([d, l]) => `<span style="left:${xPos(d)}%">${l}</span>`).join('')}</div><span></span></div>
+    ${shown.map(lane).join('')}
+    ${waiting.length > shown.length ? `<button class="more" id="lanes-more">Show ${waiting.length - shown.length} more</button>` : ''}
+  </div>`;
+}
+
+// ---------------- area summary ----------------
+function areaFacts(now) {
+  const scope = data.items.filter((i) => {
+    const a = itemAreas(i);
+    return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x));
+  });
+  const reviewed = (i) => i.ev.some((e) => e[2] === 'r' && lc(e[1]) !== lc(i.author));
+  const quiet = (i) => now - Date.parse(lastEventAt(i)) > 30 * DAY;
+  const facts = [
+    { key: 'fresh', label: 'New this week', test: (r) => r.bucket === 'fresh', c: 'fresh' },
+    { key: 'noreview', label: 'PRs with no review yet', test: (r) => r.item.t === 'pr' && !r.item.draft && !reviewed(r.item), c: 'review' },
+    { key: 'triage', label: 'Issues needing triage', test: (r) => r.item.t === 'issue' && r.item.labels.some((l) => /triage/i.test(l)), c: 'question' },
+    { key: 'quiet', label: 'Quiet for 30+ days', test: (r) => quiet(r.item), c: 'calm' },
+  ];
+  const inScope = new Set(scope.map((i) => i.n));
+  const areaRows = rows.filter((r) => inScope.has(r.item.n) && !r.done);
+  for (const f of facts) f.n = areaRows.filter(f.test).length;
+  return { facts, total: scope.length };
+}
+
+// ---------------- area pulse (heatmap) ----------------
+function pulse(el, now) {
+  const days = 28;
+  const start = new Date(now - (days - 1) * DAY); start.setUTCHours(0, 0, 0, 0);
+  const keys = Array.from({ length: days }, (_, i) => new Date(start.getTime() + i * DAY).toISOString().slice(0, 10));
+  const scopeAreas = state.areas.includes('all') ? data.areas : state.areas;
+  const grid = new Map(), mine = new Map();
+  for (const a of scopeAreas) { grid.set(a, keys.map(() => 0)); mine.set(a, keys.map(() => 0)); }
+  for (const item of data.items) {
+    for (const a of itemAreas(item)) {
+      if (!grid.has(a)) continue;
+      for (const [at, actor, kind] of item.ev) {
+        if (kind === 'rr') continue;
+        const k = keys.indexOf(at.slice(0, 10));
+        if (k >= 0) (lc(actor) === state.user ? mine : grid).get(a)[k]++;
+      }
+    }
   }
-  el.innerHTML = `<div class="scope-wrap"><div class="sweep"></div><svg viewBox="0 0 ${S} ${S}" role="img" aria-label="Radar of items around you">${g}</svg></div>
-    <div class="scope-legend">${['question', 'changes', 'review', 'newpr'].map((k) => `<span><i style="background:${css(ACTION[k].c)}"></i>${k === 'newpr' ? 'New in area' : ACTION[k].label}</span>`).join('')}<span><i style="background:${css('--calm')}"></i>Their move</span><span class="mono" style="color:var(--ink-3)">distance = how long</span></div>`;
-  el.querySelectorAll('.blip').forEach((node) => {
-    const b = blips[+node.dataset.i];
-    node.onmousemove = (e) => showTip(e, `<b>#${b.r.item.n} ${esc(b.r.item.title)}</b><span style="color:${css(ACTION[b.r.action].c)}">@${esc(b.r.who)} ${esc(ACTION[b.r.action].verb)}</span> · <span class="k">${humanAge(b.r.bucket === 'reply' ? b.r.since : b.r.last, now)} ago</span>`);
+  const areas = [...grid.keys()].sort((a, b) => grid.get(b).reduce((s, v) => s + v, 0) - grid.get(a).reduce((s, v) => s + v, 0)).slice(0, 8);
+  if (!areas.length) { el.innerHTML = '<p style="color:var(--ink-2);margin:0">Pick at least one area above to see its pulse.</p>'; return; }
+  const max = Math.max(1, ...areas.flatMap((a) => grid.get(a)));
+  const level = (v) => (v === 0 ? 0 : Math.min(4, 1 + Math.floor((v / max) * 3.999)));
+  const cell = 22, gap = 3, L = 120, T = 22;
+  const W = L + days * (cell + gap) + 120, H = T + areas.length * (cell + gap) + 4;
+  let g = '';
+  keys.forEach((k, i) => {
+    const d = new Date(`${k}T00:00:00Z`);
+    if (d.getUTCDay() === 1 && i < days - 2) g += `<text x="${L + i * (cell + gap)}" y="13" font-size="10" fill="${css('--ink-3')}">${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>`;
+  });
+  areas.forEach((a, r) => {
+    const y = T + r * (cell + gap);
+    const total = grid.get(a).reduce((s, v) => s + v, 0), yours = mine.get(a).reduce((s, v) => s + v, 0);
+    g += `<text x="${L - 10}" y="${y + 15}" text-anchor="end" font-size="12" fill="${css('--ink-2')}">${esc(a)}</text>`;
+    grid.get(a).forEach((v, i) => {
+      const x = L + i * (cell + gap), m = mine.get(a)[i];
+      g += `<rect class="hc" data-a="${esc(a)}" data-i="${i}" x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${css(`--heat-${level(v)}`)}"/>`;
+      if (m) g += `<rect x="${x + 7}" y="${y + cell - 5}" width="${cell - 14}" height="3" rx="1.5" fill="${css('--ink')}" pointer-events="none"/>`;
+    });
+    g += `<text x="${L + days * (cell + gap) + 6}" y="${y + 15}" font-size="11" fill="${css('--ink-3')}">${total}${yours ? ` · ${yours} you` : ''}</text>`;
+  });
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Activity per area per day">${g}</svg>
+    <div class="pulse-legend"><span>quiet<span class="ramp">${[0, 1, 2, 3, 4].map((l) => `<i style="background:var(--heat-${l})"></i>`).join('')}</span>busy (comments, reviews, pushes by others)</span><span><i style="display:inline-block;width:12px;height:3px;border-radius:2px;background:var(--ink);margin-right:6px;vertical-align:3px"></i>you were active that day</span></div>`;
+  el.querySelectorAll('.hc').forEach((node) => {
+    const a = node.dataset.a, i = +node.dataset.i;
+    node.onmousemove = (e) => showTip(e, `<b>${esc(a)} · ${new Date(`${keys[i]}T00:00:00Z`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</b><span class="k">${grid.get(a)[i]} by others · ${mine.get(a)[i]} by you</span>`);
     node.onmouseleave = hideTip;
   });
 }
 
-// ---------------- queue history (sparkline) ----------------
+// ---------------- queue history ----------------
 function queueHistory(now) {
   const prefs = { user: state.user, areas: state.areas, teams: state.teams };
   const end = new Date(now); end.setUTCHours(23, 59, 59, 999);
@@ -472,72 +533,29 @@ function queueHistory(now) {
   return pts;
 }
 function sparkline(pts) {
-  const W = 120, H = 28, max = Math.max(1, ...pts);
+  const W = 110, H = 24, max = Math.max(1, ...pts);
   const p = pts.map((v, i) => `${(i / (pts.length - 1) * W).toFixed(1)},${(H - 3 - (v / max) * (H - 6)).toFixed(1)}`).join(' ');
   const last = p.split(' ').pop().split(',');
-  return `<svg width="${W + 6}" height="${H}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${css('--ping')}" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${css('--ping')}"/></svg>`;
-}
-
-// ---------------- area pulse (heatmap) ----------------
-function pulse(el, now) {
-  const days = 28;
-  const start = new Date(now - (days - 1) * DAY); start.setUTCHours(0, 0, 0, 0);
-  const keys = Array.from({ length: days }, (_, i) => new Date(start.getTime() + i * DAY).toISOString().slice(0, 10));
-  const scopeAreas = state.areas.includes('all') ? data.areas : state.areas;
-  const grid = new Map(), mine = new Map();
-  for (const a of scopeAreas) { grid.set(a, keys.map(() => 0)); mine.set(a, keys.map(() => 0)); }
-  for (const item of data.items) {
-    for (const a of itemAreas(item)) {
-      if (!grid.has(a)) continue;
-      for (const [at, actor, kind] of item.ev) {
-        if (kind === 'rr') continue;
-        const k = keys.indexOf(at.slice(0, 10));
-        if (k < 0) continue;
-        (lc(actor) === state.user ? mine : grid).get(a)[k]++;
-      }
-    }
-  }
-  let areas = [...grid.keys()].sort((a, b) => grid.get(b).reduce((s, v) => s + v, 0) - grid.get(a).reduce((s, v) => s + v, 0)).slice(0, 8);
-  if (!areas.length) { el.innerHTML = '<p style="color:var(--ink-2);margin:0">Pick at least one area above to see its pulse.</p>'; return; }
-  const max = Math.max(1, ...areas.flatMap((a) => grid.get(a)));
-  const level = (v) => (v === 0 ? 0 : Math.min(4, 1 + Math.floor((v / max) * 3.999)));
-  const cell = 22, gap = 3, L = 120, T = 22;
-  const W = L + days * (cell + gap) + 60, H = T + areas.length * (cell + gap) + 4;
-  let g = '';
-  keys.forEach((k, i) => {
-    const d = new Date(`${k}T00:00:00Z`);
-    if ((d.getUTCDay() === 1 && i > 2) || (i === 0 && d.getUTCDay() !== 1 && d.getUTCDay() !== 0 && d.getUTCDay() !== 6) || (i === 0 && d.getUTCDay() === 1)) g += `<text x="${L + i * (cell + gap)}" y="13" font-size="10" fill="${css('--ink-3')}">${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>`;
-  });
-  areas.forEach((a, r) => {
-    const y = T + r * (cell + gap);
-    const total = grid.get(a).reduce((s, v) => s + v, 0), yours = mine.get(a).reduce((s, v) => s + v, 0);
-    g += `<text x="${L - 10}" y="${y + 15}" text-anchor="end" font-size="12" fill="${css('--ink-2')}">${esc(a)}</text>`;
-    grid.get(a).forEach((v, i) => {
-      const x = L + i * (cell + gap), m = mine.get(a)[i];
-      g += `<rect class="hc" data-a="${esc(a)}" data-i="${i}" x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${css(`--heat-${level(v)}`)}"/>`;
-      if (m) g += `<circle cx="${x + cell / 2}" cy="${y + cell / 2}" r="3.5" fill="${css('--ping')}" pointer-events="none"/>`;
-    });
-    g += `<text x="${L + days * (cell + gap) + 6}" y="${y + 15}" font-size="11" fill="${css('--ink-3')}">${total}${yours ? ` · ${yours} you` : ''}</text>`;
-  });
-  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Activity per area per day">${g}</svg>
-    <div class="pulse-legend"><span>quiet<span class="ramp">${[0, 1, 2, 3, 4].map((l) => `<i style="background:var(--heat-${l})"></i>`).join('')}</span>busy (comments, reviews, pushes by others)</span><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ping);margin-right:6px"></i>you were active that day</span></div>`;
-  el.querySelectorAll('.hc').forEach((node) => {
-    const a = node.dataset.a, i = +node.dataset.i;
-    node.onmousemove = (e) => showTip(e, `<b>${esc(a)} · ${new Date(`${keys[i]}T00:00:00Z`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</b><span class="k">${grid.get(a)[i]} events by others · ${mine.get(a)[i]} by you</span>`);
-    node.onmouseleave = hideTip;
-  });
+  return `<svg width="${W + 4}" height="${H}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${css('--accent')}" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${css('--accent')}"/></svg>`;
 }
 
 // ---------------- render ----------------
 function render() {
   if (!data) return;
+  // Keep the reader where they are: rebuilding the page must never move the scroll position.
+  const y = scrollY;
+  renderInner();
+  scrollTo({ top: y, behavior: 'instant' });
+}
+
+function renderInner() {
   renderAreas();
   const now = Date.now();
   const main = $('#main');
   if (!state.user) {
-    main.innerHTML = `<section class="hero" style="grid-template-columns:1fr"><div><div class="eyebrow">Radar offline</div>
-      <h1 class="headline calm">Who's waiting on <em>you</em>?</h1>
-      <p class="stats">Type your GitHub login in the bar above and pick the areas you look after. Everything stays in this browser and in the page link.</p></div></section>`;
+    main.innerHTML = `<section class="hero" style="grid-template-columns:1fr"><div><div class="eyebrow">Get started</div>
+      <h1 class="headline">Who's waiting on <em>you</em>?</h1>
+      <p style="color:var(--ink-2)">Type your GitHub login in the bar above and pick the areas you look after. Your choice is kept in this browser and in the page link.</p></div></section>`;
     userEl.focus();
     return;
   }
@@ -545,93 +563,97 @@ function render() {
   const live = rows.filter((r) => !r.done);
   const waiting = live.filter((r) => r.bucket === 'reply');
   document.title = waiting.length ? `(${waiting.length}) Backstage Radar` : 'Backstage Radar';
-
-  // group pings by person
-  const people = new Map();
-  for (const r of waiting) {
-    const k = lc(r.who);
-    if (!people.has(k)) people.set(k, { who: r.who, rows: [] });
-    people.get(k).rows.push(r);
-  }
-  const ppl = [...people.values()].sort((a, b) => (a.rows[0].since < b.rows[0].since ? -1 : 1));
-  const oldest = waiting.reduce((m, r) => (!m || r.since < m.since ? r : m), null);
+  const people = new Set(waiting.map((r) => lc(r.who))).size;
+  const overdue = waiting.filter((r) => now - Date.parse(r.since) > OVERDUE_DAYS * DAY).length;
   const hist = queueHistory(now);
   const cut = lastVisit ? Date.parse(lastVisit) : now - DAY;
   const newSince = live.filter((r) => r.bucket !== 'waiting' && r.bucket !== 'backlog' && Date.parse(r.last) > cut).length;
-  const n = waiting.length, np = ppl.length;
-
-  const personCard = (p) => {
-    const r = p.rows[0], a = ACTION[r.action], age = ageParts(r.since, now);
-    const extra = p.rows.length > 1 ? ` <span class="n">+${p.rows.length - 1} more</span>` : '';
-    return `<a class="person" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="--c:var(${a.c})">
-      ${avatar(p.who, 44)}
-      <div style="min-width:0"><div class="who">@${esc(p.who)} <span>${esc(a.verb)}</span></div>
-      <div class="what"><span class="n">#${r.item.n}</span> ${esc(r.item.title)}${extra}</div></div>
-      <div class="wait"><b>${age.v}</b><small>${age.u}</small></div></a>`;
-  };
-  const shown = ppl.slice(0, 6);
-  const heroLeft = n
-    ? `<div class="eyebrow">Right now</div>
-       <h1 class="headline"><em>${np} ${np === 1 ? 'person is' : 'people are'}</em> waiting on you</h1>
-       <div class="stats"><span><b>${n}</b> ${n === 1 ? 'item' : 'items'}</span><span>oldest <b>${humanAge(oldest.since, now)}</b></span>
-         <span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> a month ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
-       <div class="people">${shown.map(personCard).join('')}${ppl.length > shown.length ? `<button class="person more" data-tab="reply">+ ${ppl.length - shown.length} more people · see the board</button>` : ''}</div>`
-    : `<div class="eyebrow">Right now</div>
-       <h1 class="headline calm">Nobody is waiting on <em>you</em></h1>
-       <div class="stats"><span class="spark">${sparkline(hist)}<span>was <b>${hist[0]}</b> a month ago</span></span>${newSince ? `<span><b>${newSince}</b> new since your last visit</span>` : ''}</div>
-       <div class="allclear">All pings answered. Have a look at <b>${live.filter((r) => r.bucket === 'fresh').length}</b> new items in your areas below, or enjoy the quiet.</div>`;
+  const { facts, total } = areaFacts(now);
+  const fmax = Math.max(1, ...facts.map((f) => f.n));
+  const areaName = state.areas.includes('all') ? 'all areas' : state.areas.join(', ') || 'no areas';
 
   main.innerHTML = `
     <section class="hero">
-      <div>${heroLeft}</div>
-      <div class="scope-card" id="scope"></div>
+      <div class="side">
+        <div class="intro">
+          <div class="eyebrow">Right now</div>
+          <h1 class="headline">${waiting.length ? `<em>${people} ${people === 1 ? 'person' : 'people'}</em> waiting on you` : 'All <em>clear</em>'}</h1>
+          <div class="stats">
+            <div class="stat ${overdue ? 'warn' : ''}"><b>${overdue}</b><span>overdue (${OVERDUE_DAYS}+ days)</span></div>
+            <div class="stat"><b>${newSince}</b><span>new since last visit</span></div>
+            <div class="stat" style="grid-column:1/-1"><b>${waiting.length} <span style="font:400 12px var(--font-body);color:var(--ink-2)">open asks · was ${hist[0]} a month ago</span></b>${sparkline(hist)}</div>
+          </div>
+        </div>
+        <div class="summary">
+          <h3>In ${esc(areaName)} · ${total} open</h3>
+          <ul>${facts.map((f) => `<li><button data-fact="${f.key}" style="--c:var(--${f.c})"><span>${esc(f.label)}</span><b>${f.n}</b><span class="bar-mini"><i style="width:${(f.n / fmax) * 100}%"></i></span></button></li>`).join('')}</ul>
+        </div>
+      </div>
+      ${lanes(now)}
     </section>
 
-    <div class="section-h"><h2>Strip board</h2><p>Everything in your scope, one strip per item.</p></div>
-    <div class="tabs" role="tablist">${ORDER.map((k) => {
-      const c = live.filter((r) => r.bucket === k).length;
-      return `<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab === k}" style="--c:var(${TABS[k].c})"><span class="dot"></span>${TABS[k].label}<b>${c}</b></button>`;
-    }).join('')}</div>
-    <div class="board-tools"><input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}">
+    <div class="section-h" id="board"><h2>Board</h2><p>Everything in your scope, one strip per item.</p></div>
+    <div class="tabs" role="tablist">${ORDER.map((k) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter}">${TABS[k]}<b>${live.filter((r) => r.bucket === k).length}</b></button>`).join('')}</div>
+    <div class="board-tools">${state.filter ? `<span class="filter-chip">${esc(facts.find((f) => f.key === state.filter).label)}<button id="clear-filter" aria-label="Clear filter">×</button></span>` : ''}
+      <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}">
       <label><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}> show done</label><span class="spacer"></span>
       <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>d</kbd> done</span></div>
     <ul class="strips" id="strips"></ul>
 
     <div class="section-h"><h2>Area pulse</h2><p>Last 4 weeks of activity in the areas you watch.</p></div>
     <div class="pulse" id="pulse"></div>
-    <footer>Data from <a href="https://github.com/${esc(data.repo)}" target="_blank" rel="noopener">${esc(data.repo)}</a>, refreshed every 30 minutes. "Done", your settings and your last visit live in this browser only. <a href="./${esc(location.search)}">Classic view</a></footer>`;
+    <footer>Data from <a href="https://github.com/${esc(data.repo.split(' ')[0])}" target="_blank" rel="noopener">${esc(data.repo)}</a>, refreshed every 30 minutes. "Done", your settings and your last visit live in this browser only. <a href="./${esc(location.search)}">Classic view</a></footer>`;
 
-  main.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => { state.tab = b.dataset.tab; state.sel = 0; state.limit = 40; render(); $('#strips')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
-  $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now); };
-  $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now); };
-  scope($('#scope'), now);
-  renderBoard(now);
+  const toBoard = () => $('#board').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Tabs only swap the list below them: no re-render, no scrolling.
+  main.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => {
+    state.tab = b.dataset.tab; state.sel = 0; state.limit = 40;
+    if (state.filter) { state.filter = null; $('.filter-chip')?.remove(); }
+    main.querySelectorAll('[data-tab]').forEach((t) => t.setAttribute('aria-selected', t === b));
+    // A shorter list must not pull the page up under the pointer.
+    const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
+    renderBoard(now, facts);
+  }));
+  main.querySelectorAll('[data-fact]').forEach((b) => (b.onclick = () => { state.filter = b.dataset.fact; state.sel = 0; state.limit = 40; render(); toBoard(); }));
+  $('#clear-filter')?.addEventListener('click', () => { state.filter = null; render(); });
+  $('#lanes-more')?.addEventListener('click', () => { state.laneLimit += 20; render(); });
+  $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
+  $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now, facts); };
+  renderBoard(now, facts);
   pulse($('#pulse'), now);
 }
 
-function renderBoard(now) {
+function renderBoard(now, facts) {
   const q = state.query.trim().toLowerCase().replace(/^[#@]/, '');
   const cut = lastVisit ? Date.parse(lastVisit) : now - DAY;
-  boardRows = rows.filter((r) => r.bucket === state.tab && (state.showDone || !r.done));
+  if (state.filter) {
+    const f = facts.find((x) => x.key === state.filter);
+    const scope = new Set(data.items.filter((i) => { const a = itemAreas(i); return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x)); }).map((i) => i.n));
+    boardRows = rows.filter((r) => scope.has(r.item.n) && f.test(r) && (state.showDone || !r.done));
+  } else {
+    boardRows = rows.filter((r) => r.bucket === state.tab && (state.showDone || !r.done));
+  }
   if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
   const ul = $('#strips');
-  if (!boardRows.length) { ul.innerHTML = `<li class="empty-board">${state.tab === 'reply' ? 'Nobody is waiting on you here.' : 'Nothing on this board.'}</li>`; return; }
+  if (!boardRows.length) { ul.innerHTML = `<li class="empty-board">${state.tab === 'reply' && !state.filter ? 'Nobody is waiting on you.' : 'Nothing here.'}</li>`; return; }
   state.sel = Math.min(state.sel, boardRows.length - 1);
   ul.innerHTML = boardRows.slice(0, state.limit).map((r, i) => {
     const it = r.item, a = ACTION[r.action];
     const ref = r.bucket === 'reply' || r.bucket === 'mine' ? r.since : r.last;
-    const waited = (now - Date.parse(ref)) / DAY;
+    const days = (now - Date.parse(ref)) / DAY;
+    const over = days > OVERDUE_DAYS && (r.bucket === 'reply' || r.bucket === 'mine');
     const isNew = Date.parse(r.last) > cut && r.bucket !== 'waiting';
-    return `<li class="strip ${r.done ? 'done' : ''} ${i === state.sel ? 'sel' : ''}" data-i="${i}" style="--c:var(${a.c})">
+    return `<li class="strip ${r.done ? 'done' : ''} ${i === state.sel ? 'sel' : ''}" data-i="${i}" style="${colorVars(r.action)}">
+      <span class="edge"></span>
       <div class="cs"><b>#${it.n}</b><small>${it.t === 'pr' ? (it.draft ? 'draft pr' : 'pr') : 'issue'}</small></div>
       <div class="st"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a>
         <div class="m">${isNew ? '<span class="newtag">NEW</span>' : ''}<span class="act">${esc(a.label)}</span>${itemAreas(it).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}${r.myLast && r.bucket !== 'reply' ? `<span>you: ${humanAge(r.myLast, now)} ago</span>` : ''}</div></div>
-      <div class="from">${avatar(r.who, 26)}<span>@${esc(r.who)}</span></div>
-      <div class="tm"><b class="${waited > 7 && (r.bucket === 'reply' || r.bucket === 'mine') ? 'old' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b><button data-n="${it.n}">${r.done ? 'undo' : 'done'}</button></div>
+      <div class="from">${avatar(r.who, 24)}<span>@${esc(r.who)}</span></div>
+      <div class="tm"><b class="${over ? 'over' : ''}" title="${esc(new Date(ref).toLocaleString())}">${humanAge(ref, now)}</b><button data-n="${it.n}">${r.done ? 'undo' : 'done'}</button></div>
     </li>`;
   }).join('') + (boardRows.length > state.limit ? `<li><button class="more-btn" id="more">Show ${boardRows.length - state.limit} more</button></li>` : '');
   ul.onclick = (e) => {
-    if (e.target.id === 'more') { state.limit += 80; renderBoard(now); return; }
+    if (e.target.id === 'more') { state.limit += 80; renderBoard(now, facts); return; }
     const n = e.target.closest('button[data-n]')?.dataset.n;
     if (n) toggleDone(data.items.find((i) => String(i.n) === n));
   };
@@ -658,12 +680,12 @@ async function load(first) {
     for (const i of data.items) i.url ||= `https://github.com/${repo}/${i.t === 'pr' ? 'pull' : 'issues'}/${i.n}`;
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
-    $('#fresh').innerHTML = `<i></i>${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago`;
+    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago`;
     $('#fresh').classList.toggle('stale', age > 180);
     if (first) { if (state.user) readVisit(); paintMe(); }
     render();
   } catch (err) {
-    $('#fresh').innerHTML = `<i></i>could not load data (${esc(err.message)})`;
+    $('#fresh').textContent = `could not load data (${err.message})`;
     $('#fresh').classList.add('stale');
   }
 }
