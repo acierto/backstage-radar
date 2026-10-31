@@ -162,6 +162,7 @@
   .board-tools .spacer { flex: 1; }
   .board-tools input[type=search] { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; width: 240px; font-size: 13px; }
   .board-tools label { display: inline-flex; gap: 6px; align-items: center; }
+  .board-tools select { font: 13px var(--font-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 5px 8px; }
   .filter-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--accent); color: var(--ink); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12px; }
   .filter-chip button { border: 0; background: transparent; cursor: pointer; color: var(--ink-2); padding: 0 6px; }
   kbd { font: 11px var(--font-mono); border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--ink-2); }
@@ -274,7 +275,7 @@ const state = {
   user: lc(params.get('user') || saved.user || ''),
   areas: params.has('areas') ? csv(params.get('areas')) : saved.areas || [],
   teams: params.has('teams') ? csv(params.get('teams')) : saved.teams || [],
-  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7,
+  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7, sort: store.get('radar:sort', 'newest'),
 };
 let data = null, rows = [], boardRows = [], lastVisit = null;
 
@@ -310,6 +311,14 @@ const ACTION = {
 };
 const colorVars = (a) => `--c:var(--${ACTION[a].c});--c-ink:var(--${ACTION[a].c}-ink)`;
 const lastEventAt = (i) => (i.ev.length ? i.ev[i.ev.length - 1][0] : i.created);
+// The time a strip shows: when they asked (waiting/your items) or the latest activity (everything else).
+const refTime = (r) => (r.bucket === 'reply' || r.bucket === 'mine' ? r.since : r.last);
+const SORTS = {
+  newest:   { label: 'Newest first', cmp: (a, b) => (refTime(b) > refTime(a) ? 1 : refTime(b) < refTime(a) ? -1 : 0) },
+  oldest:   { label: 'Oldest first', cmp: (a, b) => (refTime(a) > refTime(b) ? 1 : refTime(a) < refTime(b) ? -1 : 0) },
+  active:   { label: 'Most active', cmp: (a, b) => b.item.ev.length - a.item.ev.length },
+  number:   { label: 'Issue number', cmp: (a, b) => b.item.n - a.item.n },
+};
 
 function analyse(item, bucket, user) {
   let myReview = null, pushAfter = false, pingKind = null, pinger = null, lastOther = null;
@@ -596,6 +605,7 @@ function renderInner() {
     <div class="tabs" role="tablist">${ORDER.map((k) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab === k && !state.filter}">${TABS[k]}<b>${live.filter((r) => r.bucket === k).length}</b></button>`).join('')}</div>
     <div class="board-tools">${state.filter ? `<span class="filter-chip">${esc(facts.find((f) => f.key === state.filter).label)}<button id="clear-filter" aria-label="Clear filter">×</button></span>` : ''}
       <input type="search" id="q" placeholder="Filter by title, #number, person" value="${esc(state.query)}">
+      <label for="sort">sort <select id="sort">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${state.sort === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></label>
       <label><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}> show done</label><span class="spacer"></span>
       <span class="keys"><kbd>j</kbd> <kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>d</kbd> done</span></div>
     <ul class="strips" id="strips"></ul>
@@ -619,6 +629,11 @@ function renderInner() {
   $('#lanes-more')?.addEventListener('click', () => { state.laneLimit += 20; render(); });
   $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
   $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now, facts); };
+  $('#sort').onchange = (e) => {
+    state.sort = e.target.value; state.sel = 0; store.set('radar:sort', state.sort);
+    const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
+    renderBoard(now, facts);
+  };
   renderBoard(now, facts);
   pulse($('#pulse'), now);
 }
@@ -634,6 +649,7 @@ function renderBoard(now, facts) {
     boardRows = rows.filter((r) => r.bucket === state.tab && (state.showDone || !r.done));
   }
   if (q) boardRows = boardRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || lc(r.who).includes(q) || lc(r.item.author).includes(q));
+  boardRows = [...boardRows].sort(SORTS[state.sort]?.cmp || SORTS.newest.cmp);
   const ul = $('#strips');
   if (!boardRows.length) { ul.innerHTML = `<li class="empty-board">${state.tab === 'reply' && !state.filter ? 'Nobody is waiting on you.' : 'Nothing here.'}</li>`; return; }
   state.sel = Math.min(state.sel, boardRows.length - 1);
