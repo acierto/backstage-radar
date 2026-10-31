@@ -59,6 +59,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { background: var(--bg); }
   body { margin: 0; color: var(--ink); font: 15px/1.45 var(--font-body); -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
@@ -80,21 +81,56 @@
   .iam input { background: transparent; border: 0; width: 130px; font: 600 14px var(--font-mono); padding: 2px 2px; }
   .iam input::placeholder { color: var(--ink-3); font-weight: 400; }
   .bar .spacer { flex: 1; }
-  .fresh { font: 12px var(--font-mono); color: var(--ink-3); }
-  .fresh.stale { color: var(--overdue); }
   .icon-btn { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
   .icon-btn:hover { border-color: var(--accent); }
   a.icon-btn { text-decoration: none; }
   .icon-btn:disabled { opacity: .6; cursor: progress; }
-  .areas-row { padding-block: 0 10px; display: flex; align-items: center; gap: 10px; }
-  .areas-row > span { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); flex: none; }
-  .areas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; min-width: 0; }
-  .areas::-webkit-scrollbar { display: none; }
-  .area { flex: none; cursor: pointer; border: 1px solid var(--line-2); background: var(--panel); border-radius: 6px; padding: 3px 10px; font: 500 13px var(--font-mono); color: var(--ink-2); }
-  .area:hover { border-color: var(--accent); color: var(--ink); }
-  .area[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 600; }
-  .teams { flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
-  .teams input { width: 190px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 8px; font: 13px var(--font-mono); }
+  .areas-row { padding-block: 0 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .areas-row .spacer { flex: 1; }
+  .row-k { font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); flex: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip-x { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 2px 4px 2px 11px; font: 600 13px var(--font-mono); }
+  .chip-x.all { background: var(--accent); border-color: var(--accent); }
+  .chip-x .n { font-weight: 400; opacity: .7; margin-left: 4px; }
+  .chip-x button { border: 0; background: transparent; color: inherit; opacity: .7; cursor: pointer; width: 20px; height: 20px; border-radius: 50%; font-size: 14px; line-height: 1; display: grid; place-items: center; }
+  .chip-x button:hover { opacity: 1; background: color-mix(in srgb, var(--bg) 20%, transparent); }
+  .chip-x.soft { background: var(--panel); color: var(--ink); border-color: var(--line-2); }
+  .add-btn { border: 1px dashed var(--line-2); background: transparent; color: var(--ink-2); border-radius: 999px; padding: 3px 12px; font: 500 13px var(--font-mono); cursor: pointer; }
+  .add-btn:hover, .add-btn[aria-expanded="true"] { border-color: var(--accent); border-style: solid; color: var(--ink); }
+  .team-in { border: 1px solid var(--accent); background: var(--panel); border-radius: 999px; padding: 3px 12px; font: 13px var(--font-mono); width: 200px; outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+
+  /* popovers */
+  .pop { position: relative; }
+  .pop-menu { position: absolute; top: calc(100% + 8px); z-index: 30; background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 14px 34px rgba(16, 24, 40, .16), 0 2px 6px rgba(16, 24, 40, .06); }
+  @media (prefers-reduced-motion: no-preference) { .pop-menu:not([hidden]) { animation: dd-in .12s ease-out; } }
+  .status { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 10px 6px 12px; font: 12px var(--font-mono); color: var(--ink-2); cursor: pointer; }
+  .status:hover, .status[aria-expanded="true"] { border-color: var(--accent); color: var(--ink); }
+  .status svg { color: var(--ink-3); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rereview); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rereview) 22%, transparent); }
+  .status.warm .dot { background: var(--fresh); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fresh) 22%, transparent); }
+  .status.stale .dot { background: var(--overdue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--overdue) 25%, transparent); }
+  .status.stale { color: var(--overdue); }
+  .status-menu { right: 0; width: 300px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .pm-facts { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; margin: 0 0 4px; font-size: 13px; }
+  .pm-facts dt { font: 600 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+  .pm-facts dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .pm-btn { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; text-decoration: none; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; }
+  .pm-btn:hover { border-color: var(--accent); }
+  .pm-btn:disabled { opacity: .6; cursor: progress; }
+  .pm-note { margin: 2px 0 0; font-size: 11.5px; color: var(--ink-3); }
+  .area-menu { left: 0; width: 280px; padding: 8px; }
+  .am-search { position: relative; display: flex; align-items: center; margin-bottom: 6px; }
+  .am-search svg { position: absolute; left: 9px; color: var(--ink-3); }
+  .am-search input { width: 100%; border: 1px solid var(--line-2); background: var(--panel-2); border-radius: 8px; padding: 6px 8px 6px 28px; font-size: 13px; outline: none; }
+  .am-search input:focus { border-color: var(--accent); }
+  .am-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+  .am-opt { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 7px; padding: 7px 8px; cursor: pointer; font-size: 13px; color: var(--ink); }
+  .am-opt:hover, .am-opt:focus-visible { background: var(--panel-2); outline: none; }
+  .am-opt .box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--line-2); display: grid; place-items: center; color: var(--bg); }
+  .am-opt[aria-selected="true"] .box { background: var(--accent); border-color: var(--accent); }
+  .am-opt .cnt { font: 12px var(--font-mono); color: var(--ink-3); }
+  .am-opt.all { border-bottom: 1px solid var(--line); border-radius: 7px 7px 0 0; margin-bottom: 3px; padding-bottom: 9px; font-weight: 600; }
+  .am-empty { padding: 10px 8px; font-size: 13px; color: var(--ink-3); }
 
   /* ---------- hero ---------- */
   .hero { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 28px; padding-block: 28px 0; align-items: start; }
@@ -305,8 +341,7 @@
   }
   @media (max-width: 600px) {
     .bar { position: static; }
-    .teams { display: none; }
-    .areas-row { flex-wrap: wrap; }
+    .status-menu { right: auto; left: 0; }
     .iam input { width: 110px; }
     .axis { display: none; }
     .lane { grid-template-columns: minmax(0, 1fr) 56px; }
@@ -329,17 +364,40 @@
       <input id="user" placeholder="your-login" autocomplete="off" spellcheck="false">
     </div>
     <span class="spacer"></span>
-    <span class="fresh" id="fresh">loading…</span>
-    <button class="icon-btn icon-lbl" id="pulse-btn" aria-haspopup="dialog" title="Area pulse: last 4 weeks of activity in your areas"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="6" y="1" width="4" height="4" rx="1" fill="var(--heat-3)"/><rect x="11" y="1" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="1" y="6" width="4" height="4" rx="1" fill="var(--heat-4)"/><rect x="6" y="6" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="11" y="6" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="1" y="11" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="6" y="11" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="11" y="11" width="4" height="4" rx="1" fill="var(--heat-4)"/></svg>Pulse</button>
-    <button class="icon-btn" id="refresh" title="Reload the latest scan and hide anything closed since">↻ Refresh</button>
-    <a class="icon-btn" id="scan" hidden target="_blank" rel="noopener" title="Open the scan workflow on GitHub and press Run workflow">Scan now ↗</a>
+    <div class="pop" id="status-pop">
+      <button class="status" id="status-btn" aria-haspopup="true" aria-expanded="false" aria-controls="status-menu" title="Data status">
+        <i class="dot" aria-hidden="true"></i><span id="fresh">loading…</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pop-menu status-menu" id="status-menu" hidden>
+        <dl class="pm-facts">
+          <dt>Last scan</dt><dd id="pm-scan">–</dd>
+          <dt>Next scan</dt><dd id="pm-next">–</dd>
+          <dt>Open items</dt><dd id="pm-open">–</dd>
+          <dt id="pm-hidden-k" hidden>Closed since</dt><dd id="pm-hidden" hidden>–</dd>
+        </dl>
+        <button class="pm-btn" id="refresh"><span aria-hidden="true">↻</span> Reload latest data</button>
+        <a class="pm-btn" id="scan" hidden target="_blank" rel="noopener"><span aria-hidden="true">⚡</span> Run a new scan on GitHub ↗</a>
+        <p class="pm-note">Scans run every 30 minutes, at :07 and :37. Reload also hides anything closed on GitHub since the last scan.</p>
+      </div>
+    </div>
+    <button class="icon-btn icon-only" id="pulse-btn" aria-haspopup="dialog" title="Area pulse: last 4 weeks of activity in your areas" aria-label="Area pulse"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="6" y="1" width="4" height="4" rx="1" fill="var(--heat-3)"/><rect x="11" y="1" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="1" y="6" width="4" height="4" rx="1" fill="var(--heat-4)"/><rect x="6" y="6" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="11" y="6" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="1" y="11" width="4" height="4" rx="1" fill="var(--heat-2)"/><rect x="6" y="11" width="4" height="4" rx="1" fill="var(--heat-1)"/><rect x="11" y="11" width="4" height="4" rx="1" fill="var(--heat-4)"/></svg></button>
     <button class="icon-btn icon-only" id="share" title="Copy a link with your login and areas" aria-label="Copy my link"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.2-1.2a2.8 2.8 0 014 4L11 8.5M9 11.5l-1.2 1.2a2.8 2.8 0 01-4-4L5 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-    <button class="icon-btn" id="theme" aria-label="Switch light or dark">◐</button>
+    <button class="icon-btn icon-only" id="theme" title="Switch light or dark" aria-label="Switch light or dark"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 010 12z" fill="currentColor"/></svg></button>
   </div>
   <div class="areas-row">
-    <span>Watching</span>
-    <div class="areas" id="areas" role="group" aria-label="Your areas"></div>
-    <label class="teams">teams <input id="teams" placeholder="scaffolder-maintainers" autocomplete="off" spellcheck="false"></label>
+    <span class="row-k">Watching</span>
+    <div class="chips" id="area-chips" role="group" aria-label="Areas you watch"></div>
+    <div class="pop" id="area-pop">
+      <button class="add-btn" id="area-add" aria-haspopup="listbox" aria-expanded="false" aria-controls="area-menu">+ Add area</button>
+      <div class="pop-menu area-menu" id="area-menu" hidden>
+        <div class="am-search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><input id="area-q" placeholder="Find an area" autocomplete="off" spellcheck="false" aria-label="Find an area"></div>
+        <div class="am-list" id="area-list" role="listbox" aria-multiselectable="true"></div>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <span class="row-k">Teams</span>
+    <div class="chips" id="team-chips" role="group" aria-label="Your teams"></div>
   </div>
 </header>
 
@@ -495,26 +553,105 @@ $('#share').onclick = async () => {
   b.classList.remove('icon-only');
   setTimeout(() => { b.innerHTML = icon; b.classList.add('icon-only'); }, 1600);
 };
-const userEl = $('#user'), teamsEl = $('#teams');
-userEl.value = state.user; teamsEl.value = state.teams.join(', ');
+const userEl = $('#user');
+userEl.value = state.user;
 function paintMe() { $('#me-ph').outerHTML = `<span id="me-ph" style="display:contents">${state.user ? avatar(state.user, 26) : '<span class="ph"></span>'}</span>`; }
 let typing;
 userEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc(userEl.value.trim().replace(/^@/, '')); savePrefs(); readVisit(); paintMe(); paintScanLink(); render(); }, 400); };
-teamsEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.teams = csv(teamsEl.value); savePrefs(); render(); }, 400); };
 
+// ---------------- popovers (status, area picker) ----------------
+let openPop = null;
+function togglePop(btn, menu, onOpen) {
+  if (openPop && openPop.menu === menu) { closePop(); return; }
+  closePop();
+  menu.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  openPop = { btn, menu };
+  onOpen?.();
+}
+function closePop(refocus) {
+  if (!openPop) return;
+  openPop.menu.hidden = true; openPop.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) openPop.btn.focus();
+  openPop = null;
+}
+document.addEventListener('mousedown', (e) => { if (openPop && !e.target.closest('.pop')) closePop(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && openPop) { e.stopPropagation(); closePop(true); } });
+$('#status-btn').onclick = () => togglePop($('#status-btn'), $('#status-menu'));
+
+// ---------------- areas: chips + searchable picker ----------------
+function areaCounts() {
+  const m = new Map();
+  for (const it of data.items) for (const a of itemAreas(it)) m.set(a, (m.get(a) || 0) + 1);
+  return m;
+}
+function setAreas(next) { state.areas = next; state.filter = null; savePrefs(); render(); }
 function renderAreas() {
   const all = state.areas.includes('all');
-  const sel = data.areas.filter((a) => !all && state.areas.includes(a));
-  const rest = data.areas.filter((a) => all || !state.areas.includes(a));
-  $('#areas').innerHTML = [`<button class="area" data-a="all" aria-pressed="${all}">all areas</button>`]
-    .concat([...sel, ...rest].map((a) => `<button class="area" data-a="${esc(a)}" aria-pressed="${!all && state.areas.includes(a)}">${esc(a)}</button>`)).join('');
-  $('#areas').onclick = (e) => {
-    const a = e.target.closest('.area')?.dataset.a; if (!a) return;
-    if (a === 'all') state.areas = all ? [] : ['all'];
-    else { const s = new Set(state.areas.filter((x) => x !== 'all')); s.has(a) ? s.delete(a) : s.add(a); state.areas = [...s]; }
-    state.filter = null; savePrefs(); render();
+  const counts = areaCounts();
+  const chips = all
+    ? [`<span class="chip-x all">all areas<span class="n">${data.items.filter((i) => itemAreas(i).length).length}</span><button data-rm="all" aria-label="Stop watching all areas">×</button></span>`]
+    : state.areas.map((a) => `<span class="chip-x">${esc(a)}<span class="n">${counts.get(a) || 0}</span><button data-rm="${esc(a)}" aria-label="Stop watching ${esc(a)}">×</button></span>`);
+  $('#area-chips').innerHTML = chips.join('') || '<span style="font-size:13px;color:var(--ink-3)">nothing yet</span>';
+  $('#area-chips').onclick = (e) => {
+    const a = e.target.closest('[data-rm]')?.dataset.rm; if (!a) return;
+    setAreas(a === 'all' ? [] : state.areas.filter((x) => x !== a));
+  };
+  $('#area-add').textContent = state.areas.length ? '+ Add area' : '+ Pick your areas';
+  if (!$('#area-menu').hidden) renderAreaList();
+}
+function renderAreaList() {
+  const q = $('#area-q').value.trim().toLowerCase();
+  const all = state.areas.includes('all');
+  const counts = areaCounts();
+  const check = '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5.2l2 2L8 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const opt = (key, label, n, on, cls = '') => `<button class="am-opt ${cls}" role="option" data-a="${esc(key)}" aria-selected="${on}"><span class="box">${on ? check : ''}</span><span>${esc(label)}</span><span class="cnt">${n}</span></button>`;
+  // Areas that start with the search come first, then the busiest.
+  const list = data.areas.filter((a) => !q || a.includes(q))
+    .sort((a, b) => (q ? Number(b.startsWith(q)) - Number(a.startsWith(q)) : 0) || (counts.get(b) || 0) - (counts.get(a) || 0));
+  $('#area-list').innerHTML =
+    (!q ? opt('all', 'All areas', data.items.filter((i) => itemAreas(i).length).length, all, 'all') : '') +
+    (list.map((a) => opt(a, a, counts.get(a) || 0, !all && state.areas.includes(a))).join('') || '<div class="am-empty">No area matches.</div>');
+}
+$('#area-add').onclick = () => togglePop($('#area-add'), $('#area-menu'), () => { $('#area-q').value = ''; renderAreaList(); $('#area-q').focus(); });
+$('#area-q').oninput = renderAreaList;
+$('#area-q').onkeydown = (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); $('#area-list .am-opt')?.focus(); } if (e.key === 'Enter') { e.preventDefault(); $('#area-list .am-opt')?.click(); } };
+$('#area-list').onkeydown = (e) => {
+  const opts = [...$('#area-list').querySelectorAll('.am-opt')], i = opts.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); opts[Math.min(opts.length - 1, i + 1)]?.focus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); i <= 0 ? $('#area-q').focus() : opts[i - 1].focus(); }
+};
+$('#area-list').onclick = (e) => {
+  const a = e.target.closest('.am-opt')?.dataset.a; if (!a) return;
+  const focusKey = a;
+  if (a === 'all') setAreas(state.areas.includes('all') ? [] : ['all']);
+  else { const set = new Set(state.areas.filter((x) => x !== 'all')); set.has(a) ? set.delete(a) : set.add(a); setAreas([...set]); }
+  renderAreaList();
+  $(`#area-list .am-opt[data-a="${CSS.escape(focusKey)}"]`)?.focus();
+};
+
+// ---------------- teams: chips + inline add ----------------
+function renderTeams() {
+  const el = $('#team-chips');
+  el.innerHTML = state.teams.map((t) => `<span class="chip-x soft">${esc(t)}<button data-rm="${esc(t)}" aria-label="Remove team ${esc(t)}">×</button></span>`).join('')
+    + `<button class="add-btn" id="team-add" title="Review requests and @mentions of these teams count as yours">+ team</button>`;
+  el.onclick = (e) => {
+    const t = e.target.closest('[data-rm]')?.dataset.rm;
+    if (t) { state.teams = state.teams.filter((x) => x !== t); savePrefs(); renderTeams(); render(); return; }
+    if (e.target.id === 'team-add') {
+      const input = document.createElement('input');
+      input.className = 'team-in'; input.placeholder = 'e.g. scaffolder-maintainers'; input.setAttribute('aria-label', 'Team slug');
+      e.target.replaceWith(input); input.focus();
+      const commit = (keep) => {
+        const v = csv(input.value);
+        if (keep && v.length) { state.teams = [...new Set([...state.teams, ...v])]; savePrefs(); render(); }
+        renderTeams();
+      };
+      input.onkeydown = (k) => { if (k.key === 'Enter') commit(true); if (k.key === 'Escape') { k.stopPropagation(); commit(false); } };
+      input.onblur = () => commit(true);
+    }
   };
 }
+renderTeams();
 
 // ---------------- waiting lanes ----------------
 // Shared time axis, log-scaled so a 2-hour ping and a 10-week ping are both readable. Right edge = now.
@@ -960,11 +1097,11 @@ function paintScanLink() {
   } else a.hidden = true;
 }
 $('#refresh').onclick = async () => {
-  const b = $('#refresh');
-  b.disabled = true; b.textContent = '↻ Refreshing…';
+  const b = $('#refresh'), label = b.innerHTML;
+  b.disabled = true; b.textContent = 'Reloading…';
   await load(false);
   b.textContent = '✓ Up to date';
-  setTimeout(() => { b.textContent = '↻ Refresh'; b.disabled = false; }, 1500);
+  setTimeout(() => { b.innerHTML = label; b.disabled = false; }, 1500);
 };
 
 // ---------------- load ----------------
@@ -992,14 +1129,22 @@ async function load(first) {
     const hidden = await dropClosedSinceScan(repo);
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
-    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago · next in ${nextScanIn(Date.now())}m${hidden ? ` · ${hidden} closed since, hidden` : ''}`;
+    const now = Date.now();
+    $('#fresh').textContent = `${data.items.length} open · ${humanAge(data.generatedAt, now)} ago`;
+    $('#status-btn').classList.toggle('warm', age > 45 && age <= 180);
+    $('#status-btn').classList.toggle('stale', age > 180);
+    $('#status-btn').title = age > 180 ? 'The last scan is over 3 hours old' : 'Data status';
+    $('#pm-scan').textContent = `${humanAge(data.generatedAt, now)} ago`;
+    $('#pm-next').textContent = `in ${nextScanIn(now)} min`;
+    $('#pm-open').textContent = `${data.items.length} issues & PRs`;
+    $('#pm-hidden-k').hidden = $('#pm-hidden').hidden = !hidden;
+    $('#pm-hidden').textContent = `${hidden} hidden`;
     paintScanLink();
-    $('#fresh').classList.toggle('stale', age > 180);
     if (first) { if (state.user) readVisit(); paintMe(); }
     render();
   } catch (err) {
     $('#fresh').textContent = `could not load data (${err.message})`;
-    $('#fresh').classList.add('stale');
+    $('#status-btn').classList.add('stale');
   }
 }
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
