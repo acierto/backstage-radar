@@ -57,3 +57,29 @@ test('own item with reply from someone else -> mine', () => {
   const item = { ...base, author: 'acierto', ev: [['2026-10-01T00:00:00Z', 'acierto', 'open'], ['2026-10-02T00:00:00Z', 'bob', 'c']] };
   assert.equal(classify(item, prefs).bucket, 'mine');
 });
+
+test('mentions: a comment addressed to someone else only references you', () => {
+  const r = extractMentions("Hi @djanickova, can you run with what @acierto shared here? I'm going to assign this issue to you 👍", 'backstage');
+  assert.deepEqual(r.users, ['djanickova']);
+  assert.deepEqual(r.refs, ['acierto']);
+});
+
+test('mentions: direct asks still count', () => {
+  assert.deepEqual(extractMentions('@acierto what do you think?').users, ['acierto']);
+  assert.deepEqual(extractMentions('Thanks @bob! @acierto can you review?').users.sort(), ['acierto', 'bob']);
+  assert.deepEqual(extractMentions('Looks good to me, maybe @acierto has an opinion on the API?').users, ['acierto']);
+  assert.deepEqual(extractMentions('Hey @bob,\nsee below.\n@acierto could you check the docs part?').users.sort(), ['acierto', 'bob']);
+});
+
+test('mentions: cc / fyi lines are references', () => {
+  const r = extractMentions('Fixed the flaky test.\n\ncc @acierto @kim');
+  assert.deepEqual(r.users, []);
+  assert.deepEqual(r.refs.sort(), ['acierto', 'kim']);
+});
+
+test('a reaction from you on the pinging comment clears the ping', () => {
+  const ev = [['2026-10-02T00:00:00Z', 'bob', 'c', ['acierto'], [], ['acierto']]];
+  assert.equal(classify({ ...base, ev }, { user: 'acierto', areas: [] }), null);
+  const evNoAck = [['2026-10-02T00:00:00Z', 'bob', 'c', ['acierto'], [], ['kim']]];
+  assert.equal(classify({ ...base, ev: evNoAck }, { user: 'acierto', areas: [] }).bucket, 'reply');
+});

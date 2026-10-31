@@ -1,7 +1,7 @@
 // Shared classification logic — used by the dashboard (browser) and the digest (Node).
 // Input: the compact data.json produced by src/collect.mjs.
 //
-// Item shape:
+// Item shape (ev entries: [at, actor, kind, mentionedUsers?, mentionedTeams?, pingedUsersWhoReacted?]):
 //   { n, t: 'pr'|'issue', title, url, author, draft, labels: [...], created, updated,
 //     reviewers: [logins], teams: [slugs],
 //     ev: [[isoTime, actor, kind, [mentionedLogins], [mentionedTeams]], ...] }
@@ -49,7 +49,7 @@ export function classify(item, prefs) {
   let lastOther = null; // last event by someone else
   let lastOtherBy = null;
 
-  for (const [at, actor, kind, mentions = [], teamMentions = []] of ev) {
+  for (const [at, actor, kind, mentions = [], teamMentions = [], acks = []] of ev) {
     const a = lc(actor);
     if (a === user) {
       lastMine = at;
@@ -57,8 +57,9 @@ export function classify(item, prefs) {
     }
     lastOther = at;
     lastOtherBy = actor;
+    // A reaction from you on the comment that pinged you means "seen, no reply needed".
     const pinged =
-      mentions.includes(user) || (teams.length && teamMentions.some((t) => teams.includes(t)));
+      (mentions.includes(user) && !acks.includes(user)) || (teams.length && teamMentions.some((t) => teams.includes(t)));
     if (pinged) {
       lastMention = at;
       lastMentionBy = kind === 'rr' ? `${actor} (review request)` : actor;

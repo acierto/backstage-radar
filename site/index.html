@@ -280,6 +280,7 @@
   .hcard .hc-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .hcard .hc-tags span { font: 11px var(--font-mono); padding: 1px 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-2); }
   .hcard .hc-tags span.kind { background: color-mix(in srgb, var(--c) 12%, var(--panel)); border-color: color-mix(in srgb, var(--c) 35%, transparent); color: var(--c-ink); }
+  .hcard .hc-tip { font-size: 12px; color: var(--ink-2); background: var(--panel-2); border-radius: 8px; padding: 7px 10px; }
   .hcard .hc-people { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line-2); font-size: 12px; color: var(--ink-2); }
   .hcard .hc-faces { display: flex; }
   .hcard .hc-faces img, .hcard .hc-faces .ph { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--panel); margin-left: -6px; font-size: 8px; }
@@ -424,12 +425,12 @@ if (!SORTS[state.sort]) state.sort = 'newest';
 
 function analyse(item, bucket, user) {
   let myReview = null, pushAfter = false, pingKind = null, pinger = null, lastOther = null;
-  for (const [at, actor, kind, mentions = [], teams = []] of item.ev) {
+  for (const [at, actor, kind, mentions = [], teams = [], acks = []] of item.ev) {
     const a = lc(actor);
     if (a === user) { if (kind === 'r') { myReview = at; pushAfter = false; } continue; }
     lastOther = actor;
     if (kind === 'p' && myReview) pushAfter = true;
-    if (mentions.includes(user) || teams.some((t) => state.teams.includes(t))) { pingKind = kind; pinger = actor; }
+    if ((mentions.includes(user) && !acks.includes(user)) || teams.some((t) => state.teams.includes(t))) { pingKind = kind; pinger = actor; }
   }
   let action;
   if (bucket === 'reply') action = pushAfter ? 'changes' : (pingKind === 'rr' || (item.t === 'pr' && !pinger)) ? 'review' : 'question';
@@ -880,6 +881,7 @@ function cardHtml(r, now) {
         <dt>You</dt><dd>${r.myLast ? `last replied ${humanAge(r.myLast, now)} ago` : 'not involved yet'}</dd>
       </dl>
       <div class="hc-tags"><span class="kind">${kind}</span>${itemAreas(it).map((x) => `<span>${esc(x)}</span>`).join('')}</div>
+      ${r.bucket === 'reply' && r.action === 'question' ? '<div class="hc-tip">Just a mention? React 👀 to their comment on GitHub and it leaves this list at the next scan.</div>' : ''}
       <div class="hc-people"><span class="hc-faces">${people.slice(0, 6).map((p) => avatar(p, 22)).join('')}</span>
         <span>${talk} ${talk === 1 ? 'reply' : 'replies'} · ${people.length} ${people.length === 1 ? 'person' : 'people'}</span><span class="hc-open">Open ↗</span></div>
     </div>`;

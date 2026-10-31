@@ -18,11 +18,14 @@ if (!token) {
 }
 
 const ACTOR = `author { login }`;
+// Who reacted to a comment. A reaction from the person it pings means "seen, no reply needed".
+const REACTORS = `reactionGroups { reactors(first: 10) { nodes { ... on User { login } } } }`;
 const COMMON = `
   number title url createdAt updatedAt body
   author { login }
+  ${REACTORS}
   labels(first: 30) { nodes { name } }
-  comments(last: ${config.limits.comments}) { nodes { ${ACTOR} createdAt body } }
+  comments(last: ${config.limits.comments}) { nodes { ${ACTOR} createdAt body ${REACTORS} } }
 `;
 
 const ISSUES = `query($owner: String!, $name: String!, $cursor: String) {
@@ -44,7 +47,7 @@ const PULLS = `query($owner: String!, $name: String!, $cursor: String) {
         ${COMMON}
         isDraft
         reviews(last: ${config.limits.reviews}) {
-          nodes { ${ACTOR} submittedAt body comments(first: 20) { nodes { ${ACTOR} createdAt body } } }
+          nodes { ${ACTOR} submittedAt body ${REACTORS} comments(first: 20) { nodes { ${ACTOR} createdAt body } } }
         }
         commits(last: 10) { nodes { commit { committedDate authors(first: 1) { nodes { user { login } } } } } }
         reviewRequests(first: 15) {
@@ -103,10 +106,13 @@ async function fetchAll(query, field) {
 const bots = config.bots.map((b) => b.toLowerCase());
 const isBot = (login) => !login || login.endsWith('[bot]') || bots.includes(login.toLowerCase());
 
-function event(at, actor, kind, body) {
+function event(at, actor, kind, body, reactionGroups) {
   if (!at || isBot(actor)) return null;
   const { users, teams } = extractMentions(body || '', owner);
-  return [at, actor, kind, users, teams];
+  // Keep only reactions from people this comment pings: that is all the dashboard needs.
+  const reactors = new Set((reactionGroups || []).flatMap((g) => g.reactors?.nodes || []).map((u) => u?.login?.toLowerCase()).filter(Boolean));
+  const acks = users.filter((u) => reactors.has(u));
+  return [at, actor, kind, users, teams, acks];
 }
 
 function reviewer(r) {
@@ -116,8 +122,8 @@ function reviewer(r) {
 
 function toItem(node, t) {
   const author = node.author?.login || 'ghost';
-  const ev = [event(node.createdAt, author, 'open', node.body)];
-  for (const c of node.comments.nodes) ev.push(event(c.createdAt, c.author?.login, 'c', c.body));
+  const ev = [event(node.createdAt, author, 'open', node.body, node.reactionGroups)];
+  for (const c of node.comments.nodes) ev.push(event(c.createdAt, c.author?.login, 'c', c.body, c.reactionGroups));
 
   const item = {
     n: node.number,
@@ -135,7 +141,7 @@ function toItem(node, t) {
 
   if (t === 'pr') {
     for (const r of node.reviews.nodes) {
-      ev.push(event(r.submittedAt, r.author?.login, 'r', r.body));
+      ev.push(event(r.submittedAt, r.author?.login, 'r', r.body, r.reactionGroups));
       for (const c of r.comments.nodes) ev.push(event(c.createdAt, c.author?.login, 'rc', c.body));
     }
     for (const { commit } of node.commits.nodes) {
@@ -163,8 +169,10 @@ function toItem(node, t) {
 }
 
 // Keep the file small: drop empty trailing arrays.
+// Shape: [at, actor, kind, mentionedUsers?, mentionedTeams?, usersWhoReacted?]
 function trimEvent(e) {
-  const [at, actor, kind, users, teams] = e;
+  const [at, actor, kind, users, teams, acks] = e;
+  if (acks?.length) return [at, actor, kind, users, teams || [], acks];
   if (teams?.length) return [at, actor, kind, users, teams];
   if (users?.length) return [at, actor, kind, users];
   return [at, actor, kind];
