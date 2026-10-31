@@ -441,9 +441,9 @@ function scope(el, now) {
     const c = css(ACTION[b.r.action].c);
     const hot = b.r.bucket === 'reply';
     const size = hot ? 7 : b.r.bucket === 'waiting' ? 3.5 : 5;
-    g += `<g class="blip" data-i="${i}">${hot ? `<circle class="halo" cx="${b.x}" cy="${b.y}" r="${size}" fill="none" stroke="${c}" stroke-width="2" style="animation-delay:${(hash(b.r.item.n) * 2).toFixed(2)}s"/>` : ''}
+    g += `<a href="${esc(b.r.item.url)}" target="_blank" rel="noopener" aria-label="#${b.r.item.n} ${esc(b.r.item.title)}"><g class="blip" data-i="${i}">${hot ? `<circle class="halo" cx="${b.x}" cy="${b.y}" r="${size}" fill="none" stroke="${c}" stroke-width="2" style="animation-delay:${(hash(b.r.item.n) * 2).toFixed(2)}s"/>` : ''}
       <circle class="core" cx="${b.x}" cy="${b.y}" r="${size}" fill="${c}" ${b.r.bucket === 'waiting' ? 'opacity="0.55"' : ''}/>
-      <circle cx="${b.x}" cy="${b.y}" r="${Math.max(12, size + 6)}" fill="transparent"/></g>`;
+      <circle cx="${b.x}" cy="${b.y}" r="${Math.max(12, size + 6)}" fill="transparent"/></g></a>`;
   }
   el.innerHTML = `<div class="scope-wrap"><div class="sweep"></div><svg viewBox="0 0 ${S} ${S}" role="img" aria-label="Radar of items around you">${g}</svg></div>
     <div class="scope-legend">${['question', 'changes', 'review', 'newpr'].map((k) => `<span><i style="background:${css(ACTION[k].c)}"></i>${k === 'newpr' ? 'New in area' : ACTION[k].label}</span>`).join('')}<span><i style="background:${css('--calm')}"></i>Their move</span><span class="mono" style="color:var(--ink-3)">distance = how long</span></div>`;
@@ -451,7 +451,6 @@ function scope(el, now) {
     const b = blips[+node.dataset.i];
     node.onmousemove = (e) => showTip(e, `<b>#${b.r.item.n} ${esc(b.r.item.title)}</b><span style="color:${css(ACTION[b.r.action].c)}">@${esc(b.r.who)} ${esc(ACTION[b.r.action].verb)}</span> · <span class="k">${humanAge(b.r.bucket === 'reply' ? b.r.since : b.r.last, now)} ago</span>`);
     node.onmouseleave = hideTip;
-    node.onclick = () => window.open(b.r.item.url, '_blank', 'noopener');
   });
 }
 
