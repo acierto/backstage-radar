@@ -607,6 +607,15 @@ function sparkline(pts) {
   return `<svg width="${W + 4}" height="${H}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${css('--accent')}" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${css('--accent')}"/></svg>`;
 }
 
+// When the board list is swapped, keep only the on-screen part of its old height, so the page
+// doesn't jump under the pointer but a shorter list never leaves an empty block below.
+function holdVisibleHeight() {
+  const ul = $('#strips');
+  ul.style.minHeight = '';
+  const visible = Math.max(0, Math.min(ul.offsetHeight, innerHeight - ul.getBoundingClientRect().top));
+  ul.style.minHeight = `${visible}px`;
+}
+
 // ---------------- sort dropdown (custom listbox) ----------------
 const CHEVRON = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHECK = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.5l2.6 2.5L11 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -730,7 +739,7 @@ function renderInner() {
     if (state.filter) { state.filter = null; $('.filter-chip')?.remove(); }
     main.querySelectorAll('[data-tab]').forEach((t) => t.setAttribute('aria-selected', t === b));
     // A shorter list must not pull the page up under the pointer.
-    const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
+    holdVisibleHeight();
     renderBoard(now, facts);
   }));
   main.querySelectorAll('[data-fact]').forEach((b) => (b.onclick = () => { state.filter = b.dataset.fact; state.sel = 0; state.limit = 40; render(); toBoard(); }));
@@ -740,7 +749,7 @@ function renderInner() {
   $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
   wireDropdown((value) => {
     state.sort = value; state.sel = 0; store.set('radar:sort', state.sort);
-    const ul = $('#strips'); ul.style.minHeight = `${ul.offsetHeight}px`;
+    holdVisibleHeight();
     renderBoard(now, facts);
   });
   renderBoard(now, facts);
