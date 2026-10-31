@@ -119,7 +119,13 @@
   .lanes { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; }
   .lanes-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 4px; }
   .lanes-h h2 { margin: 0; font: 800 20px var(--font-display); letter-spacing: -0.01em; }
-  .lanes-h p { margin: 0; font-size: 13px; color: var(--ink-2); }
+  .lanes-h p { margin: 0; font-size: 13px; color: var(--ink-2); flex-basis: 100%; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; margin-left: auto; }
+  .seg button { border: 0; background: var(--panel); padding: 5px 12px; font-size: 13px; color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; }
+  .seg button + button { border-left: 1px solid var(--line-2); }
+  .seg button b { font: 600 13px var(--font-mono); color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .seg button[aria-pressed="true"] b { color: var(--bg); }
   .key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0 4px; }
   .key i { display: inline-block; width: 14px; height: 6px; border-radius: 3px; margin-right: 6px; vertical-align: 2px; }
   .axis, .lane { display: grid; grid-template-columns: minmax(0, 270px) minmax(0, 1fr) 64px; gap: 14px; align-items: center; }
@@ -275,7 +281,7 @@ const state = {
   user: lc(params.get('user') || saved.user || ''),
   areas: params.has('areas') ? csv(params.get('areas')) : saved.areas || [],
   teams: params.has('teams') ? csv(params.get('teams')) : saved.teams || [],
-  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7, sort: store.get('radar:sort', 'newest'),
+  tab: 'reply', query: '', showDone: false, limit: 40, sel: 0, filter: null, laneLimit: 7, sort: store.get('radar:sort', 'newest'), lanesMode: store.get('radar:lanes', 'me'),
 };
 let data = null, rows = [], boardRows = [], lastVisit = null;
 
@@ -429,16 +435,22 @@ const xPos = (days) => 100 * (1 - Math.log1p(Math.max(0, days)) / Math.log1p(AXI
 const TICKS = [[AXIS_DAYS, '4 months'], [28, '4w'], [7, '1w'], [1, '1d'], [0, 'now']];
 
 function lanes(now) {
-  const waiting = rows.filter((r) => r.bucket === 'reply' && !r.done);
+  const forMe = rows.filter((r) => r.bucket === 'reply' && !r.done);
+  const forArea = rows.filter((r) => (r.bucket === 'fresh' || r.bucket === 'activity') && !r.done);
+  const mode = state.lanesMode === 'areas' ? 'areas' : 'me';
+  const waiting = [...(mode === 'me' ? forMe : forArea)].sort((a, b) => (b.since > a.since ? 1 : b.since < a.since ? -1 : 0));
+  const toggle = `<div class="seg" role="group" aria-label="Show">
+      <button data-lanes="me" aria-pressed="${mode === 'me'}">For me <b>${forMe.length}</b></button>
+      <button data-lanes="areas" aria-pressed="${mode === 'areas'}">My areas <b>${forArea.length}</b></button></div>`;
   if (!waiting.length) {
-    return `<div class="lanes"><div class="lanes-h"><h2>Nobody is waiting on you</h2></div>
-      <div class="allclear">Every ping is answered. <b>${rows.filter((r) => r.bucket === 'fresh' && !r.done).length}</b> new items in your areas are on the board below.</div></div>`;
+    return `<div class="lanes"><div class="lanes-h"><h2>Who is waiting</h2>${toggle}</div>
+      <div class="allclear">${mode === 'me' ? `Nobody is waiting on you. <b>${forArea.length}</b> items in your areas could use a look: switch to <b>My areas</b>.` : 'Nothing new or unanswered in your areas this week.'}</div></div>`;
   }
-  const kinds = ['question', 'changes', 'review'].filter((k) => waiting.some((r) => r.action === k));
+  const kinds = ['question', 'changes', 'review', 'reply', 'newpr', 'newissue'].filter((k) => waiting.some((r) => r.action === k));
   const shown = waiting.slice(0, state.laneLimit);
   const grid = TICKS.slice(1, -1).map(([d]) => `<span class="grid" style="left:${xPos(d)}%"></span>`).join('');
   const lane = (r) => {
-    const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = days > OVERDUE_DAYS;
+    const days = (now - Date.parse(r.since)) / DAY, a = ACTION[r.action], w = ageWords(r.since, now), over = mode === 'me' && days > OVERDUE_DAYS;
     const left = xPos(days);
     return `<a class="lane" href="${esc(r.item.url)}" target="_blank" rel="noopener" style="${colorVars(r.action)}">
       <div class="id">${avatar(r.who, 34)}<div style="min-width:0"><div><span class="who-name">@${esc(r.who)}</span><span class="who-act">${esc(a.label)}</span></div>
@@ -447,8 +459,8 @@ function lanes(now) {
       <div class="age ${over ? 'over' : ''}">${w.v}<small>${over ? 'overdue' : w.u}</small></div></a>`;
   };
   return `<div class="lanes">
-    <div class="lanes-h"><h2>Who is waiting</h2><p>Oldest first. The bar runs from when they asked to now.</p></div>
-    <div class="key">${kinds.map((k) => `<span><i style="background:var(--${ACTION[k].c})"></i>${ACTION[k].label}</span>`).join('')}<span>· overdue after ${OVERDUE_DAYS} days</span></div>
+    <div class="lanes-h"><h2>Who is waiting</h2>${toggle}<p>${mode === 'me' ? 'Asked you directly' : 'New or unanswered in your areas'} · newest first · the bar runs from ${mode === 'me' ? 'when they asked' : 'their last message'} to now</p></div>
+    <div class="key">${kinds.map((k) => `<span><i style="background:var(--${ACTION[k].c})"></i>${ACTION[k].label}</span>`).join('')}${mode === 'me' ? `<span>· overdue after ${OVERDUE_DAYS} days</span>` : ''}</div>
     <div class="axis"><span></span><div class="ticks">${TICKS.map(([d, l]) => `<span style="left:${xPos(d)}%">${l}</span>`).join('')}</div><span></span></div>
     ${shown.map(lane).join('')}
     ${waiting.length > shown.length ? `<button class="more" id="lanes-more">Show ${waiting.length - shown.length} more</button>` : ''}
@@ -627,6 +639,7 @@ function renderInner() {
   main.querySelectorAll('[data-fact]').forEach((b) => (b.onclick = () => { state.filter = b.dataset.fact; state.sel = 0; state.limit = 40; render(); toBoard(); }));
   $('#clear-filter')?.addEventListener('click', () => { state.filter = null; render(); });
   $('#lanes-more')?.addEventListener('click', () => { state.laneLimit += 20; render(); });
+  main.querySelectorAll('[data-lanes]').forEach((b) => (b.onclick = () => { state.lanesMode = b.dataset.lanes; state.laneLimit = 7; store.set('radar:lanes', state.lanesMode); render(); }));
   $('#q').oninput = (e) => { state.query = e.target.value; state.sel = 0; renderBoard(now, facts); };
   $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderBoard(now, facts); };
   $('#sort').onchange = (e) => {
@@ -687,6 +700,20 @@ addEventListener('keydown', (e) => {
 });
 
 // ---------------- load ----------------
+// The scan can be up to 30 minutes old (longer if CI stalls). Ask GitHub which items closed or merged
+// since then and hide them. One unauthenticated call; if it fails, the page simply shows the scan.
+async function dropClosedSinceScan(repo) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return 0;
+  try {
+    const since = new Date(Date.parse(data.generatedAt) - 10 * 60000).toISOString();
+    const res = await fetch(`https://api.github.com/repos/${repo}/issues?state=closed&since=${since}&per_page=100`, { headers: { accept: 'application/vnd.github+json' } });
+    if (!res.ok) return 0;
+    const closed = new Set((await res.json()).map((i) => i.number));
+    const before = data.items.length;
+    data.items = data.items.filter((i) => !closed.has(i.n));
+    return before - data.items.length;
+  } catch { return 0; }
+}
 async function load(first) {
   try {
     const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -694,9 +721,10 @@ async function load(first) {
     data = await res.json();
     const repo = data.repo.split(' ')[0];
     for (const i of data.items) i.url ||= `https://github.com/${repo}/${i.t === 'pr' ? 'pull' : 'issues'}/${i.n}`;
+    const hidden = await dropClosedSinceScan(repo);
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
-    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago`;
+    $('#fresh').textContent = `${data.items.length} open · scanned ${humanAge(data.generatedAt, Date.now())} ago${hidden ? ` · ${hidden} closed since, hidden` : ''}`;
     $('#fresh').classList.toggle('stale', age > 180);
     if (first) { if (state.user) readVisit(); paintMe(); }
     render();
