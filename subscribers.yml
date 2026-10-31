@@ -1,0 +1,16 @@
+# People who get the daily email digest.
+# The dashboard itself needs no entry here: anyone can open it and pick their name and areas.
+#
+# user:   your GitHub login
+# areas:  area labels without the "area:" prefix, or [all] for every area (core maintainers)
+# teams:  optional team slugs whose review requests / @mentions count as pinging you
+#         (e.g. scaffolder-maintainers for @backstage/scaffolder-maintainers)
+# digest: set to false to stay listed but pause the email
+#
+# Email addresses are NOT stored here. They come from the SUBSCRIBER_EMAILS repository secret,
+# or from your public GitHub profile email if you have one.
+
+subscribers:
+  - user: acierto
+    areas: [scaffolder]
+    # teams: [scaffolder-maintainers]

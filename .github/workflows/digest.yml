@@ -1,0 +1,37 @@
+name: Daily email digest
+
+on:
+  schedule:
+    # 06:23 UTC on weekdays (07:23 Amsterdam in winter, 08:23 in summer)
+    - cron: '23 6 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Send only to this GitHub login (for testing)'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Collect fresh data
+        run: node src/collect.mjs --out site/data.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.RADAR_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Send digests
+        run: node src/digest.mjs --data site/data.json ${{ inputs.only && format('--only {0}', inputs.only) || '' }}
+        env:
+          SMTP_URL: ${{ secrets.SMTP_URL }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          SUBSCRIBER_EMAILS: ${{ secrets.SUBSCRIBER_EMAILS }}
+          GITHUB_TOKEN: ${{ secrets.RADAR_TOKEN || secrets.GITHUB_TOKEN }}

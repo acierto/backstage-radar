@@ -1,0 +1,25 @@
+# Which repository to watch.
+repo: backstage/backstage
+
+# Public URL of the dashboard (GitHub Pages of this repo). Used for links in the digest email.
+# Example: https://<org-or-user>.github.io/backstage-radar/
+dashboardUrl: 'https://acierto.github.io/backstage-radar/'
+
+# Accounts whose activity never counts as "someone replied" (names ending in [bot] are always ignored).
+bots:
+  - backstage-goalie
+  - backstage-service
+  - github-actions
+  - changeset-bot
+  - codecov
+  - netlify
+
+limits:
+  comments: 40 # latest comments read per issue/PR
+  reviews: 20 # latest reviews read per PR
+  issuesPage: 50
+  pullsPage: 20
+
+digest:
+  lookbackHours: 24 # "new in your areas" = activity in this window
+  maxItemsPerBucket: 15

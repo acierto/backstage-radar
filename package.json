@@ -1,0 +1,20 @@
+{
+  "name": "backstage-radar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared dashboard + daily digest: where you are @mentioned or your areas need you in a GitHub repo.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "collect": "node src/collect.mjs",
+    "digest": "node src/digest.mjs",
+    "digest:dry": "node src/digest.mjs --dry-run",
+    "demo-data": "node scripts/demo-data.mjs",
+    "serve": "npx --yes http-server site -p 8080 -c-1",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.16",
+    "yaml": "^2.6.1"
+  }
+}
