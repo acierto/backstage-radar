@@ -343,7 +343,7 @@ async function load() {
     const meta = $('#meta');
     meta.textContent = `${data.repo} · ${data.items.length} open items · updated ${humanAge(data.generatedAt, Date.now())} ago`;
     meta.classList.toggle('stale', ageMin > 180);
-    $('#foot').innerHTML = `Data refreshes on a schedule from <a href="https://github.com/${esc(data.repo)}" target="_blank" rel="noopener">${esc(data.repo)}</a>. Reads the latest 40 comments and 20 reviews per item. Nothing you click here is sent anywhere; "Done" is stored in this browser.`;
+    $('#foot').innerHTML = `Data refreshes on a schedule from <a href="https://github.com/${esc(data.repo)}" target="_blank" rel="noopener">${esc(data.repo)}</a>. Reads the latest 40 comments and 20 reviews per item. Nothing you click here is sent anywhere; "Done" is stored in this browser. <a href="next.html${esc(location.search)}">Try the new layout →</a>`;
     render();
   } catch (err) {
     $('#meta').textContent = `Could not load data.json (${err.message})`;

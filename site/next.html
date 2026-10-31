@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backstage Radar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%232a78d6'/%3E%3C/svg%3E">
+<style>
+  /* Layout: a "what changed" strip on top, one dominant number, three focused charts, then the working list. */
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --raised: #ffffff;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #6250d6;
+    --link: #1c5cab; --wash: #e7f0fc; --wash-strong: #cde2fb;
+    --critical: #d03b3b; --critical-wash: #fbeaea; --good: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --raised: #222220;
+      --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9;
+      --link: #86b6ef; --wash: #14243a; --wash-strong: #104281;
+      --critical: #e66767; --critical-wash: #3a1d1d; --good: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --raised: #222220;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9;
+    --link: #86b6ef; --wash: #14243a; --wash-strong: #104281;
+    --critical: #e66767; --critical-wash: #3a1d1d; --good: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button { font: inherit; font-size: 13px; color: var(--ink); background: var(--raised); border: 1px solid var(--ring); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button:hover { border-color: var(--axis); }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--s1); outline-offset: 1px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-block: 18px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 16px; min-width: 0; }
+
+  /* header */
+  .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  .top h1 { font-size: 19px; margin: 0; letter-spacing: -0.01em; }
+  .who { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+  .who b { color: var(--ink); }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--raised); border: 1px solid var(--ring); }
+  .top .spacer { flex: 1; }
+  .fresh { font-size: 12px; color: var(--muted); }
+  .fresh.stale { color: var(--critical); }
+  .settings { display: none; grid-template-columns: minmax(160px, 220px) 1fr minmax(160px, 240px); gap: 12px 20px; }
+  .settings.open { display: grid; }
+  .settings label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .settings input { font: inherit; font-size: 14px; color: var(--ink); background: var(--raised); border: 1px solid var(--ring); border-radius: 6px; padding: 6px 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--ring); background: var(--raised); color: var(--ink-2); }
+  .chip[aria-pressed="true"] { background: var(--s1); border-color: var(--s1); color: #fff; }
+  .chip.all[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+
+  /* since-last-visit strip */
+  .since { background: var(--wash); border-color: transparent; display: grid; grid-template-columns: minmax(0, 300px) 1fr; gap: 16px 24px; }
+  .since h2 { margin: 0 0 4px; font-size: 16px; }
+  .since .range { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 12px; }
+  .since .range button { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: transparent; }
+  .since .range button[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  .since .counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+  .since .counts div { font-size: 12px; color: var(--ink-2); }
+  .since .counts b { display: block; font-size: 22px; color: var(--ink); font-weight: 650; line-height: 1.1; }
+  .since .counts b.hot { color: var(--critical); }
+  .changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; min-width: 0; }
+  .changes li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--ring); min-width: 0; }
+  .changes li:first-child { border-top: 0; }
+  .changes .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .changes .t a { color: var(--ink); }
+  .changes .when { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .changes .empty { color: var(--ink-2); padding: 8px 0; }
+
+  /* tiles */
+  .tiles { display: grid; grid-template-columns: 1.6fr repeat(5, 1fr); gap: 10px; }
+  .tile { text-align: left; background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+  .tile[aria-pressed="true"] { border-color: var(--s1); box-shadow: inset 0 0 0 1px var(--s1); }
+  .tile .k { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+  .tile .v { font-size: 24px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; }
+  .tile .d { font-size: 12px; color: var(--muted); }
+  .tile.main { background: var(--critical-wash); border-color: transparent; padding: 12px 14px; }
+  .tile.main.zero { background: var(--surface); border-color: var(--ring); }
+  .tile.main .v { font-size: 40px; color: var(--critical); }
+  .tile.main.zero .v { color: var(--good); }
+  .tile.main[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--critical); }
+  .tile.dim .v { color: var(--ink-2); }
+
+  /* charts */
+  .charts { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; }
+  .chart h3 { margin: 0; font-size: 14px; }
+  .chart .sub { margin: 2px 0 8px; color: var(--ink-2); font-size: 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .viz { position: relative; }
+  svg text { font-family: inherit; }
+  .callout { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+  .callout b { color: var(--ink); }
+  .tip { position: fixed; pointer-events: none; background: var(--raised); color: var(--ink); border: 1px solid var(--ring); border-radius: 6px; padding: 6px 8px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.14); white-space: nowrap; z-index: 20; }
+  .tip .row { display: flex; align-items: center; gap: 6px; }
+  .tip .row i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .tip .row b { margin-left: auto; padding-left: 12px; font-variant-numeric: tabular-nums; }
+  .tip .tt { font-weight: 600; margin-bottom: 3px; }
+
+  /* list */
+  .list-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 6px; }
+  .list-head h2 { font-size: 16px; margin: 0; }
+  .list-head .hint { color: var(--ink-2); font-size: 12px; }
+  .list-head .spacer { flex: 1; }
+  .list-head input[type=search] { font: inherit; font-size: 13px; color: var(--ink); background: var(--raised); border: 1px solid var(--ring); border-radius: 6px; padding: 5px 8px; width: 220px; }
+  .toggle { font-size: 12px; color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+  .keys { font-size: 11px; color: var(--muted); }
+  kbd { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--ring); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--raised); color: var(--ink-2); }
+  ul.items { list-style: none; margin: 0; padding: 0; }
+  ul.items li { display: grid; grid-template-columns: 4px 1fr auto auto; gap: 12px; align-items: center; padding: 9px 6px 9px 0; border-top: 1px solid var(--grid); border-radius: 6px; }
+  ul.items li:first-child { border-top-color: transparent; }
+  ul.items li.sel { background: var(--wash); }
+  ul.items li.done { opacity: .5; }
+  .stripe { align-self: stretch; border-radius: 2px; background: transparent; }
+  .stripe.a-review { background: var(--s1); } .stripe.a-question { background: var(--s3); } .stripe.a-changes { background: var(--s4); }
+  .stripe.a-reply { background: var(--axis); } .stripe.a-new { background: var(--s2); }
+  .title { min-width: 0; }
+  .title a { color: var(--ink); font-weight: 500; }
+  .title .num { color: var(--muted); font-weight: 400; margin-right: 4px; }
+  .meta { font-size: 12px; color: var(--ink-2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .act { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; }
+  .act.a-review { color: var(--s1); }
+  .act.a-question { color: var(--s3); }
+  .act.a-changes { color: var(--s4); }
+  .act.a-reply { color: var(--ink-2); }
+  .act.a-new { color: var(--s2); }
+  .tag { font-size: 11px; padding: 0 6px; border-radius: 999px; background: var(--page); border: 1px solid var(--ring); color: var(--ink-2); }
+  .new-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--critical); display: inline-block; }
+  .age { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 13px; text-align: right; min-width: 44px; }
+  .age.old { color: var(--critical); font-weight: 600; }
+  .done-btn { font-size: 12px; padding: 3px 8px; }
+  .more { display: block !important; text-align: center; padding: 10px; }
+  footer { color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 980px) {
+    .charts { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .tile.main { grid-column: 1 / -1; }
+    .since { grid-template-columns: 1fr; }
+    .settings.open { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    ul.items li { grid-template-columns: 4px 1fr auto; }
+    ul.items li .done-btn { grid-column: 2 / -1; justify-self: start; }
+    .list-head input[type=search] { width: 100%; }
+    .keys { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) { ul.items li { transition: background .12s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Backstage Radar</h1>
+    <span class="who" id="who"></span>
+    <button id="edit" aria-expanded="false" aria-controls="settings">Edit</button>
+    <span class="spacer"></span>
+    <span class="fresh" id="fresh">Loading…</span>
+    <button id="share" title="Copy a link with your settings">Copy my link</button>
+    <button id="theme" title="Switch light/dark" aria-label="Switch light or dark theme">◐</button>
+  </header>
+
+  <section class="card settings" id="settings" aria-label="Your settings">
+    <label>GitHub login<input type="text" id="user" placeholder="e.g. acierto" autocomplete="off" spellcheck="false"></label>
+    <div><div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">Your areas</div><div class="chips" id="areas"></div></div>
+    <label>Your teams (optional)<input type="text" id="teams" placeholder="e.g. scaffolder-maintainers" autocomplete="off" spellcheck="false"></label>
+  </section>
+
+  <div id="main" style="display:flex;flex-direction:column;gap:14px"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+
+<script type="module">
+import { classify, humanAge, itemAreas, DAY } from './logic.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* unavailable */ } },
+};
+const lc = (s) => (s || '').toLowerCase();
+const csv = (s) => (s || '').split(',').map((x) => x.trim().toLowerCase().replace(/^@?[\w-]+\//, '')).filter(Boolean);
+const NEW_DAYS = 7;
+
+// ---------------- state ----------------
+const params = new URLSearchParams(location.search);
+const saved = store.get('radar:prefs', {});
+const state = {
+  user: lc(params.get('user') || saved.user || ''),
+  areas: params.has('areas') ? csv(params.get('areas')) : saved.areas || [],
+  teams: params.has('teams') ? csv(params.get('teams')) : saved.teams || [],
+  bucket: 'reply', showDone: false, query: '', limit: 50, sel: 0, sinceMode: 'visit',
+};
+let data = null, rows = [], listRows = [];
+let lastVisit = null; // previous visit time for this user, read once per page load
+
+function savePrefs() {
+  store.set('radar:prefs', { user: state.user, areas: state.areas, teams: state.teams });
+  const q = new URLSearchParams();
+  if (state.user) q.set('user', state.user);
+  if (state.areas.length) q.set('areas', state.areas.join(','));
+  if (state.teams.length) q.set('teams', state.teams.join(','));
+  try { history.replaceState(null, '', `${location.pathname}${q.toString() ? `?${q}` : ''}`); } catch { /* sandboxed */ }
+}
+function readVisit() {
+  const key = `radar:lastVisit:${state.user}`;
+  lastVisit = store.get(key, null);
+  store.set(key, new Date().toISOString());
+}
+
+// ---------------- buckets & actions ----------------
+const BUCKETS = {
+  reply:    { title: 'Needs your reply', hint: 'You were pinged or asked to review and have not responded since.' },
+  mine:     { title: 'Replies on your items', hint: 'Your own issues and PRs where someone else spoke last.' },
+  fresh:    { title: `New this week`, hint: `Opened or active in your areas in the last ${NEW_DAYS} days; you have not joined yet.` },
+  activity: { title: 'Replied after you', hint: 'You took part; others posted after your last reply.' },
+  waiting:  { title: 'Waiting on others', hint: 'The last word is yours.' },
+  backlog:  { title: 'Backlog', hint: `Open in your areas, never touched by you, quiet for ${NEW_DAYS}+ days.` },
+};
+const ORDER = ['reply', 'mine', 'fresh', 'activity', 'waiting', 'backlog'];
+const ACTIONS = {
+  review: 'Review requested', changes: 'Changes since your review', question: 'Question for you',
+  reply: 'New reply', newpr: 'New PR', newissue: 'New issue',
+};
+const actionClass = (a) => ({ review: 'a-review', question: 'a-question', changes: 'a-changes', reply: 'a-reply', newpr: 'a-new', newissue: 'a-new' })[a];
+
+function lastEventAt(item) { return item.ev.length ? item.ev[item.ev.length - 1][0] : item.created; }
+
+/** What exactly is expected from the user on this item. */
+function actionFor(item, bucket, user) {
+  let myReview = null, pushAfterReview = false, lastPing = null;
+  for (const [at, actor, kind, mentions = []] of item.ev) {
+    const a = lc(actor);
+    if (a === user && kind === 'r') { myReview = at; pushAfterReview = false; }
+    else if (a !== user && kind === 'p' && myReview) pushAfterReview = true;
+    if (a !== user && (mentions.includes(user) || kind === 'rr')) lastPing = kind;
+  }
+  if (bucket === 'reply') {
+    if (pushAfterReview) return 'changes';
+    if (lastPing === 'rr' || (item.t === 'pr' && (item.reviewers.includes(user) || item.teams.some((t) => state.teams.includes(t))))) return 'review';
+    return 'question';
+  }
+  if (bucket === 'mine' || bucket === 'activity') return pushAfterReview ? 'changes' : 'reply';
+  if (bucket === 'fresh' || bucket === 'backlog') return item.t === 'pr' ? 'newpr' : 'newissue';
+  return null;
+}
+
+function classifyAll(prefs, now) {
+  const out = [];
+  for (const item of data.items) {
+    const c = classify(item, prefs);
+    if (!c) continue;
+    let bucket = c.bucket;
+    if (bucket === 'untouched') bucket = now - Date.parse(lastEventAt(item)) < NEW_DAYS * DAY ? 'fresh' : 'backlog';
+    const action = actionFor(item, bucket, prefs.user);
+    let myLast = null;
+    for (const [at, actor] of item.ev) if (lc(actor) === prefs.user) myLast = at;
+    out.push({ item, bucket, since: c.since, reason: c.reason, action, myLast, last: lastEventAt(item) });
+  }
+  const pri = { review: 0, changes: 1, question: 2 };
+  out.sort((a, b) => ORDER.indexOf(a.bucket) - ORDER.indexOf(b.bucket)
+    || (a.bucket === 'reply' ? (pri[a.action] ?? 3) - (pri[b.action] ?? 3) : 0)
+    || (a.bucket === 'backlog' ? (a.since < b.since ? -1 : 1) : (b.since > a.since ? 1 : -1)));
+  return out;
+}
+
+// ---------------- done ----------------
+const doneKey = () => `radar:done:${state.user}`;
+const isDone = (item) => { const at = store.get(doneKey(), {})[item.n]; return !!at && at >= lastEventAt(item); };
+function toggleDone(item) {
+  const all = store.get(doneKey(), {});
+  if (isDone(item)) delete all[item.n]; else all[item.n] = lastEventAt(item);
+  const open = new Set(data.items.map((i) => String(i.n)));
+  for (const k of Object.keys(all)) if (!open.has(k)) delete all[k];
+  store.set(doneKey(), all);
+  render();
+}
+
+// ---------------- chrome ----------------
+{ const t = store.get('radar:theme', null); if (t) document.documentElement.dataset.theme = t; }
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+$('#theme').onclick = () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
+  document.documentElement.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  store.set('radar:theme', document.documentElement.dataset.theme);
+  render();
+};
+$('#share').onclick = async () => {
+  try { await navigator.clipboard.writeText(location.href); $('#share').textContent = 'Copied'; }
+  catch { $('#share').textContent = 'Copy the address bar'; }
+  setTimeout(() => ($('#share').textContent = 'Copy my link'), 1600);
+};
+$('#edit').onclick = () => {
+  const open = $('#settings').classList.toggle('open');
+  $('#edit').setAttribute('aria-expanded', open);
+  $('#edit').textContent = open ? 'Close' : 'Edit';
+};
+$('#user').value = state.user;
+$('#teams').value = state.teams.join(', ');
+let typing;
+$('#user').oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc($('#user').value.trim().replace(/^@/, '')); savePrefs(); readVisit(); render(); }, 350); };
+$('#teams').oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.teams = csv($('#teams').value); savePrefs(); render(); }, 350); };
+
+function renderSettings() {
+  const all = state.areas.includes('all');
+  $('#areas').innerHTML = [`<button class="chip all" data-a="all" aria-pressed="${all}">All areas</button>`]
+    .concat(data.areas.map((a) => `<button class="chip" data-a="${esc(a)}" aria-pressed="${!all && state.areas.includes(a)}">${esc(a)}</button>`)).join('');
+  $('#areas').onclick = (e) => {
+    const a = e.target.closest('.chip')?.dataset.a; if (!a) return;
+    if (a === 'all') state.areas = all ? [] : ['all'];
+    else { const s = new Set(state.areas.filter((x) => x !== 'all')); s.has(a) ? s.delete(a) : s.add(a); state.areas = [...s]; }
+    savePrefs(); render();
+  };
+  const areaText = state.areas.includes('all') ? 'all areas' : state.areas.join(', ') || 'no areas';
+  $('#who').innerHTML = state.user
+    ? `<b>@${esc(state.user)}</b><span class="pill">${esc(areaText)}</span>${state.teams.length ? `<span class="pill">${esc(state.teams.join(', '))}</span>` : ''}`
+    : '';
+}
+
+// ---------------- tooltip ----------------
+const tip = $('#tip');
+function showTip(evt, title, lines) {
+  tip.innerHTML = `<div class="tt">${esc(title)}</div>` + lines.map(([c, l, v]) => `<div class="row">${c ? `<i style="background:${c}"></i>` : ''}${esc(l)}<b>${v}</b></div>`).join('');
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = evt.clientX + 14, y = evt.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = evt.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = evt.clientY - r.height - 14;
+  tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+}
+const hideTip = () => { tip.hidden = true; };
+
+// ---------------- svg helpers ----------------
+function barPath(x, y, w, h, dir, round) {
+  if (w <= 0 || h <= 0) return '';
+  const r = round ? Math.min(4, w / 2, h / 2) : 0;
+  if (dir === 'up') return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
+}
+function niceMax(v) {
+  if (v <= 4) return 4;
+  const p = 10 ** Math.floor(Math.log10(v));
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
+  return v;
+}
+const legend = (items) => `<div class="legend">${items.map(([c, l]) => `<span><i style="background:${c}"></i>${esc(l)}</span>`).join('')}</div>`;
+
+// Chart A: pings by how long they have waited, colored by what is asked of you.
+const BINS = [{ l: '< 1d', long: 'under a day', max: 1 }, { l: '1–3d', long: '1–3 days', max: 3 }, { l: '3–7d', long: '3–7 days', max: 7 }, { l: '1–4w', long: '1–4 weeks', max: 28 }, { l: '> 4w', long: 'over 4 weeks', max: Infinity }];
+function pingAgeChart(el, now) {
+  const kinds = [['review', 'Review', css('--s1')], ['question', 'Question', css('--s3')], ['changes', 'Changes since review', css('--s4')]];
+  const counts = BINS.map(() => ({ review: 0, question: 0, changes: 0 }));
+  const live = rows.filter((r) => r.bucket === 'reply' && !r.done);
+  for (const r of live) {
+    const d = (now - Date.parse(r.since)) / DAY;
+    counts[BINS.findIndex((b) => d < b.max)][r.action]++;
+  }
+  if (!live.length) { el.innerHTML = `<p class="callout"><b>Nothing waiting on you.</b> New pings will show up here by age.</p>`; return; }
+  const W = Math.max(240, el.clientWidth), H = 170, L = 26, R = 4, T = 14, B = 24;
+  const totals = counts.map((c) => c.review + c.question + c.changes);
+  const max = niceMax(Math.max(1, ...totals));
+  const pw = W - L - R, ph = H - T - B, slot = pw / BINS.length, bw = Math.min(40, slot * 0.58);
+  const y = (v) => T + ph - (v / max) * ph;
+  let g = '';
+  for (const t of [0, max / 2, max]) g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? css('--grid') : css('--axis')}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="${css('--muted')}">${t}</text>`;
+  BINS.forEach((bin, i) => {
+    const x = L + slot * i + (slot - bw) / 2;
+    let base = T + ph;
+    const present = kinds.filter(([k]) => counts[i][k]);
+    present.forEach(([k, , c], j) => {
+      const h = (counts[i][k] / max) * ph - (j > 0 ? 2 : 0);
+      g += `<path d="${barPath(x, base - h, bw, h, 'up', j === present.length - 1)}" fill="${c}"/>`;
+      base -= h + 2;
+    });
+    if (totals[i]) g += `<text x="${x + bw / 2}" y="${y(totals[i]) - 5}" text-anchor="middle" font-size="11" fill="${css('--ink-2')}">${totals[i]}</text>`;
+    g += `<text x="${L + slot * i + slot / 2}" y="${H - 7}" text-anchor="middle" font-size="11" fill="${i >= 3 && totals[i] ? css('--critical') : css('--muted')}">${bin.l}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${L + slot * i}" y="${T}" width="${slot}" height="${ph}" fill="transparent"/>`;
+  });
+  const oldest = live.reduce((m, r) => (r.since < m.since ? r : m), live[0]);
+  el.innerHTML = legend(kinds.map(([, l, c]) => [c, l])) + `<svg width="${W}" height="${H}" role="img" aria-label="Pings waiting on you by age">${g}</svg>`
+    + `<p class="callout">Oldest: <b>${humanAge(oldest.since, now)}</b> on <a href="${esc(oldest.item.url || '#')}" target="_blank" rel="noopener">#${oldest.item.n}</a></p>`;
+  el.querySelectorAll('.hit').forEach((h) => {
+    const i = +h.dataset.i;
+    h.onmousemove = (e) => showTip(e, `Waiting ${BINS[i].long}`, kinds.map(([k, l, c]) => [c, l, counts[i][k]]));
+    h.onmouseleave = hideTip;
+  });
+}
+
+// Chart B: your queue over the last 30 days, rebuilt from the event history of items that are open today.
+function queueChart(el, now) {
+  const days = 30;
+  const end = new Date(now); end.setUTCHours(23, 59, 59, 999);
+  const pts = [];
+  const prefs = { user: state.user, areas: state.areas, teams: state.teams };
+  for (let i = days - 1; i >= 0; i--) {
+    const at = new Date(end.getTime() - i * DAY).toISOString();
+    let n = 0;
+    for (const item of data.items) {
+      if (item.created > at) continue;
+      const past = { ...item, reviewers: [], teams: [], ev: item.ev.filter((e) => e[0] <= at) };
+      const c = classify(past, prefs);
+      if (c && c.bucket === 'reply') n++;
+    }
+    pts.push({ day: at.slice(0, 10), n });
+  }
+  const W = Math.max(240, el.clientWidth), H = 170, L = 26, R = 30, T = 14, B = 24;
+  const max = niceMax(Math.max(1, ...pts.map((p) => p.n)));
+  const pw = W - L - R, ph = H - T - B;
+  const x = (i) => L + (i / (pts.length - 1)) * pw;
+  const y = (v) => T + ph - (v / max) * ph;
+  const s1 = css('--s1');
+  let g = '';
+  for (const t of [0, max / 2, max]) g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? css('--grid') : css('--axis')}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="${css('--muted')}">${t}</text>`;
+  const fmt = (k) => new Date(`${k}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  for (const i of [0, 15, 29]) g += `<text x="${x(i)}" y="${H - 7}" text-anchor="${i === 0 ? 'start' : i === 29 ? 'end' : 'middle'}" font-size="11" fill="${css('--muted')}">${fmt(pts[i].day)}</text>`;
+  const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.n).toFixed(1)}`).join(' ');
+  g += `<polygon points="${x(0)},${y(0)} ${line} ${x(pts.length - 1)},${y(0)}" fill="${s1}" opacity="0.12"/>`;
+  g += `<polyline points="${line}" fill="none" stroke="${s1}" stroke-width="2" stroke-linejoin="round"/>`;
+  const last = pts[pts.length - 1];
+  g += `<circle cx="${x(pts.length - 1)}" cy="${y(last.n)}" r="4" fill="${s1}" stroke="${css('--surface')}" stroke-width="2"/><text x="${x(pts.length - 1) + 7}" y="${y(last.n) + 4}" font-size="12" font-weight="600" fill="${css('--ink')}">${last.n}</text>`;
+  g += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${T + ph}" stroke="${css('--axis')}" visibility="hidden"/><circle class="dot" r="4" fill="${s1}" stroke="${css('--surface')}" stroke-width="2" visibility="hidden"/>`;
+  g += `<rect class="hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  const first = pts[0].n, delta = last.n - first;
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Pings waiting on you over 30 days">${g}</svg>`
+    + `<p class="callout">${delta === 0 ? 'Same as 30 days ago' : delta > 0 ? `<b>+${delta}</b> since 30 days ago` : `<b>${delta}</b> since 30 days ago`} · rebuilt from items open today</p>`;
+  const svg = el.querySelector('svg'), xh = svg.querySelector('.xh'), dot = svg.querySelector('.dot');
+  svg.querySelector('.hit').onmousemove = (e) => {
+    const i = Math.max(0, Math.min(pts.length - 1, Math.round(((e.clientX - svg.getBoundingClientRect().left - L) / pw) * (pts.length - 1))));
+    xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(pts[i].n)); dot.setAttribute('visibility', 'visible');
+    showTip(e, fmt(pts[i].day), [[s1, 'Waiting on you', pts[i].n]]);
+  };
+  svg.querySelector('.hit').onmouseleave = () => { hideTip(); xh.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); };
+}
+
+// Chart C: one area -> health of that area; several areas -> compare areas.
+function areaChart(el, now) {
+  const single = !state.areas.includes('all') && state.areas.length === 1;
+  const scope = data.items.filter((i) => {
+    const a = itemAreas(i);
+    return state.areas.includes('all') ? a.length : a.some((x) => state.areas.includes(x));
+  });
+  const W = Math.max(240, el.clientWidth);
+  if (!scope.length) { el.innerHTML = '<p class="callout">Pick an area to see its health.</p>'; return; }
+  if (single) {
+    const quiet = (i) => now - Date.parse(lastEventAt(i)) > 30 * DAY;
+    const reviewed = (i) => i.ev.some((e) => e[2] === 'r' && lc(e[1]) !== lc(i.author));
+    const groups = [
+      { l: 'PRs without any review', f: (i) => i.t === 'pr' && !i.draft && !reviewed(i), c: css('--s1') },
+      { l: 'PRs in review', f: (i) => i.t === 'pr' && !i.draft && reviewed(i), c: css('--s1') },
+      { l: 'Draft PRs', f: (i) => i.t === 'pr' && i.draft, c: css('--axis') },
+      { l: 'Issues needing triage', f: (i) => i.t === 'issue' && i.labels.some((l) => /triage/i.test(l)), c: css('--s2') },
+      { l: 'Other open issues', f: (i) => i.t === 'issue' && !i.labels.some((l) => /triage/i.test(l)), c: css('--s2') },
+      { l: 'Quiet for 30+ days', f: quiet, c: css('--muted') },
+      { l: 'Help wanted / good first', f: (i) => i.labels.some((l) => /help wanted|good first/i.test(l)), c: css('--s3') },
+    ].map((g) => ({ ...g, items: scope.filter(g.f) }));
+    const max = Math.max(1, ...groups.map((g) => g.items.length));
+    const rowH = 22, Lw = Math.min(170, W * 0.5), R = 34, T = 2, bh = 13;
+    const H = T + groups.length * rowH;
+    let g = `<line x1="${Lw}" x2="${Lw}" y1="0" y2="${H}" stroke="${css('--axis')}"/>`;
+    groups.forEach((gr, i) => {
+      const yy = T + i * rowH + (rowH - bh) / 2, w = (gr.items.length / max) * (W - Lw - R);
+      g += `<text x="${Lw - 8}" y="${yy + bh - 2}" text-anchor="end" font-size="12" fill="${css('--ink-2')}">${esc(gr.l)}</text>`;
+      g += `<path d="${barPath(Lw, yy, Math.max(w, gr.items.length ? 2 : 0), bh, 'right', true)}" fill="${gr.c}"/>`;
+      g += `<text x="${Lw + w + 5}" y="${yy + bh - 2}" font-size="11" fill="${css('--ink-2')}">${gr.items.length}</text>`;
+      g += `<rect class="hit" data-i="${i}" x="0" y="${T + i * rowH}" width="${W}" height="${rowH}" fill="transparent"/>`;
+    });
+    el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Health of ${esc(state.areas[0])}">${g}</svg><p class="callout"><b>${scope.length}</b> open in ${esc(state.areas[0])} · groups overlap</p>`;
+    el.querySelectorAll('.hit').forEach((h) => {
+      const gr = groups[+h.dataset.i];
+      h.onmousemove = (e) => showTip(e, gr.l, gr.items.slice(0, 5).map((i) => [null, `#${i.n} ${i.title.slice(0, 44)}${i.title.length > 44 ? '…' : ''}`, '']).concat(gr.items.length > 5 ? [[null, `…and ${gr.items.length - 5} more`, '']] : []));
+      h.onmouseleave = hideTip;
+    });
+    return;
+  }
+  // compare areas: new this week vs backlog vs waiting, per area
+  const series = [['you', 'Needs you', css('--s1')], ['fresh', 'New / active', css('--s2')], ['backlog', 'Backlog', css('--axis')]];
+  const by = new Map();
+  for (const r of rows) {
+    if (r.done || !['reply', 'fresh', 'activity', 'backlog'].includes(r.bucket)) continue;
+    const k = r.bucket === 'reply' ? 'you' : r.bucket === 'backlog' ? 'backlog' : 'fresh';
+    for (const a of itemAreas(r.item)) {
+      if (!state.areas.includes('all') && !state.areas.includes(a)) continue;
+      if (!by.has(a)) by.set(a, { you: 0, fresh: 0, backlog: 0 });
+      by.get(a)[k]++;
+    }
+  }
+  let list = [...by.entries()].map(([a, v]) => ({ a, ...v, total: v.you + v.fresh + v.backlog })).sort((x, y) => y.you - x.you || y.fresh - x.fresh || y.total - x.total).slice(0, 9);
+  const max = Math.max(1, ...list.map((d) => d.total));
+  const rowH = 22, Lw = Math.min(120, W * 0.34), R = 34, bh = 13, H = list.length * rowH + 2;
+  let g = `<line x1="${Lw}" x2="${Lw}" y1="0" y2="${H}" stroke="${css('--axis')}"/>`;
+  list.forEach((d, i) => {
+    const yy = i * rowH + (rowH - bh) / 2; let xx = Lw;
+    const segs = series.filter(([k]) => d[k]);
+    segs.forEach(([k, , c], j) => { const w = (d[k] / max) * (W - Lw - R) - (j < segs.length - 1 ? 2 : 0); g += `<path d="${barPath(xx, yy, Math.max(w, 1), bh, 'right', j === segs.length - 1)}" fill="${c}"/>`; xx += w + 2; });
+    g += `<text x="${Lw - 8}" y="${yy + bh - 2}" text-anchor="end" font-size="12" fill="${css('--ink-2')}">${esc(d.a)}</text><text x="${xx + 3}" y="${yy + bh - 2}" font-size="11" fill="${css('--ink-2')}">${d.total}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="0" y="${i * rowH}" width="${W}" height="${rowH}" fill="transparent"/>`;
+  });
+  el.innerHTML = legend(series.map(([, l, c]) => [c, l])) + `<svg width="${W}" height="${H}" role="img" aria-label="Your areas compared">${g}</svg>`;
+  el.querySelectorAll('.hit').forEach((h) => { const d = list[+h.dataset.i]; h.onmousemove = (e) => showTip(e, d.a, series.map(([k, l, c]) => [c, l, d[k]])); h.onmouseleave = hideTip; });
+}
+
+// ---------------- render ----------------
+function sinceCutoff(now) {
+  if (state.sinceMode === 'visit') return lastVisit ? Date.parse(lastVisit) : now - DAY;
+  return now - { '24h': 1, '3d': 3, '7d': 7 }[state.sinceMode] * DAY;
+}
+
+function render() {
+  if (!data) return;
+  renderSettings();
+  const now = Date.now();
+  const main = $('#main');
+  if (!state.user) {
+    $('#settings').classList.add('open');
+    main.innerHTML = `<div class="card" style="text-align:center;padding:40px 16px;color:var(--ink-2)"><h2 style="color:var(--ink);margin:0 0 6px;font-size:18px">Who are you on GitHub?</h2>Type your login above and pick the areas you look after. Your choice is kept in this browser and in the page link.</div>`;
+    document.title = 'Backstage Radar';
+    return;
+  }
+  const prefs = { user: state.user, areas: state.areas, teams: state.teams };
+  rows = classifyAll(prefs, now).map((r) => ({ ...r, done: isDone(r.item) }));
+  const live = rows.filter((r) => !r.done);
+  const count = (b) => live.filter((r) => r.bucket === b).length;
+  const replyN = count('reply');
+  document.title = replyN ? `(${replyN}) Backstage Radar` : 'Backstage Radar';
+
+  // since-last-visit
+  const cut = sinceCutoff(now);
+  const changed = live.filter((r) => r.bucket !== 'waiting' && r.bucket !== 'backlog' && Date.parse(r.last) > cut);
+  const sinceLabel = state.sinceMode === 'visit' ? (lastVisit ? `your last visit, ${humanAge(lastVisit, now)} ago` : 'yesterday (first visit)') : `the last ${state.sinceMode}`;
+  const cnt = (f) => changed.filter(f).length;
+  const nPing = cnt((r) => r.bucket === 'reply'), nMine = cnt((r) => r.bucket === 'mine'), nNew = cnt((r) => r.bucket === 'fresh'), nAct = cnt((r) => r.bucket === 'activity');
+  const changeRows = changed.slice(0, 8).map((r) => `<li><span class="act ${actionClass(r.action)}">${esc(ACTIONS[r.action] || r.bucket)}</span>
+      <span class="t"><a href="${esc(r.item.url || '#')}" target="_blank" rel="noopener"><span style="color:var(--muted)">#${r.item.n}</span> ${esc(r.item.title)}</a></span>
+      <span class="when">${humanAge(r.last, now)} ago</span></li>`).join('');
+
+  const tile = (b, extra = '') => {
+    const n = count(b);
+    const fresh = live.filter((r) => r.bucket === b && Date.parse(r.last) > cut).length;
+    return `<button class="tile ${extra}" data-b="${b}" aria-pressed="${state.bucket === b}" title="${esc(BUCKETS[b].hint)}"><span class="k">${esc(BUCKETS[b].title)}</span><span class="v">${n}</span><span class="d">${fresh ? `${fresh} new since then` : '&nbsp;'}</span></button>`;
+  };
+
+  main.innerHTML = `
+    <section class="card since" aria-label="What changed">
+      <div>
+        <h2>Since ${esc(sinceLabel)}</h2>
+        <div class="range" role="group" aria-label="Compare with">
+          ${[['visit', 'Last visit'], ['24h', '24h'], ['3d', '3 days'], ['7d', '7 days']].map(([k, l]) => `<button data-s="${k}" aria-pressed="${state.sinceMode === k}">${l}</button>`).join('')}
+        </div>
+        <div class="counts">
+          <div><b class="${nPing ? 'hot' : ''}">${nPing}</b>new pings for you</div>
+          <div><b>${nMine}</b>replies on your items</div>
+          <div><b>${nNew}</b>new in your areas</div>
+          <div><b>${nAct}</b>replied after you</div>
+        </div>
+      </div>
+      <ul class="changes">${changeRows || '<li class="empty" style="display:block">Nothing new since then. You are up to date.</li>'}${changed.length > 8 ? `<li style="display:block;font-size:12px;color:var(--ink-2)">…and ${changed.length - 8} more below</li>` : ''}</ul>
+    </section>
+
+    <div class="tiles">
+      <button class="tile main ${replyN ? '' : 'zero'}" data-b="reply" aria-pressed="${state.bucket === 'reply'}" title="${esc(BUCKETS.reply.hint)}">
+        <span class="k">${BUCKETS.reply.title}</span><span class="v">${replyN}</span>
+        <span class="d">${replyN ? `${live.filter((r) => r.bucket === 'reply' && r.action === 'review').length} reviews · ${live.filter((r) => r.bucket === 'reply' && r.action === 'question').length} questions · ${live.filter((r) => r.bucket === 'reply' && r.action === 'changes').length} re-reviews` : 'Nobody is waiting on you'}</span>
+      </button>
+      ${tile('mine')}${tile('fresh')}${tile('activity')}${tile('waiting', 'dim')}${tile('backlog', 'dim')}
+    </div>
+
+    <div class="charts">
+      <section class="card chart"><h3>Your pings by age</h3><p class="sub">What is waiting on you, and what kind of answer it needs</p><div class="viz" id="c-age"></div></section>
+      <section class="card chart"><h3>${state.areas.length === 1 && !state.areas.includes('all') ? `${esc(state.areas[0])} at a glance` : 'Your areas'}</h3><p class="sub">${state.areas.length === 1 && !state.areas.includes('all') ? 'All open items in the area, by state. Hover a bar to see items.' : 'Where things need you, per area'}</p><div class="viz" id="c-area"></div></section>
+      <section class="card chart"><h3>Are you keeping up?</h3><p class="sub">Pings waiting on you, last 30 days</p><div class="viz" id="c-queue"></div></section>
+    </div>
+
+    <section class="card">
+      <div class="list-head">
+        <h2 id="list-title"></h2><span class="hint" id="list-hint"></span><span class="spacer"></span>
+        <span class="keys"><kbd>j</kbd>/<kbd>k</kbd> move · <kbd>o</kbd> open · <kbd>d</kbd> done</span>
+        <label class="toggle"><input type="checkbox" id="show-done" ${state.showDone ? 'checked' : ''}> show done</label>
+        <input type="search" id="q" placeholder="Filter by title, #number, author" value="${esc(state.query)}">
+      </div>
+      <ul class="items" id="items"></ul>
+    </section>`;
+
+  main.querySelector('.range').onclick = (e) => { const s = e.target.closest('button')?.dataset.s; if (s) { state.sinceMode = s; render(); } };
+  main.querySelector('.tiles').onclick = (e) => { const b = e.target.closest('.tile')?.dataset.b; if (b) { state.bucket = b; state.limit = 50; state.sel = 0; render(); } };
+  $('#show-done').onchange = (e) => { state.showDone = e.target.checked; renderList(now); };
+  $('#q').oninput = (e) => { state.query = e.target.value; state.limit = 50; state.sel = 0; renderList(now); };
+
+  pingAgeChart($('#c-age'), now);
+  areaChart($('#c-area'), now);
+  queueChart($('#c-queue'), now);
+  renderList(now);
+}
+
+function renderList(now) {
+  const b = state.bucket;
+  const q = state.query.trim().toLowerCase().replace(/^#/, '');
+  const cut = sinceCutoff(now);
+  listRows = rows.filter((r) => r.bucket === b && (state.showDone || !r.done));
+  if (q) listRows = listRows.filter((r) => r.item.title.toLowerCase().includes(q) || String(r.item.n).startsWith(q) || r.item.author.toLowerCase().includes(q));
+  $('#list-title').textContent = `${BUCKETS[b].title} · ${listRows.length}`;
+  $('#list-hint').textContent = BUCKETS[b].hint;
+  state.sel = Math.min(state.sel, Math.max(0, listRows.length - 1));
+  const ul = $('#items');
+  if (!listRows.length) {
+    ul.innerHTML = `<li style="display:block;color:var(--ink-2);padding:18px 4px">${b === 'reply' ? 'Inbox zero. Nobody is waiting on you.' : 'Nothing here.'}</li>`;
+    return;
+  }
+  ul.innerHTML = listRows.slice(0, state.limit).map((r, idx) => {
+    const it = r.item;
+    const waited = (now - Date.parse(r.since)) / DAY;
+    const isNew = Date.parse(r.last) > cut;
+    const areas = itemAreas(it).map((a) => `<span class="tag">${esc(a)}</span>`).join('');
+    const mine = r.myLast && (b === 'activity' || b === 'waiting') ? `<span>your last reply ${humanAge(r.myLast, now)} ago</span>` : '';
+    return `<li class="${r.done ? 'done' : ''} ${idx === state.sel ? 'sel' : ''}" data-idx="${idx}">
+      <span class="stripe ${actionClass(r.action) || ''}"></span>
+      <div class="title"><a href="${esc(it.url || '#')}" target="_blank" rel="noopener"><span class="num">#${it.n}</span>${esc(it.title)}</a>
+        <div class="meta">${isNew ? '<span class="new-dot" title="New since your last visit"></span>' : ''}${r.action ? `<span class="act ${actionClass(r.action)}">${esc(ACTIONS[r.action])}</span>` : ''}
+          <span>${esc(r.reason)}</span>${it.t === 'pr' ? '<span class="tag">PR</span>' : '<span class="tag">issue</span>'}${it.draft ? '<span class="tag">draft</span>' : ''}${areas}<span>by @${esc(it.author)}</span>${mine}</div></div>
+      <span class="age ${waited > 7 && (b === 'reply' || b === 'mine') ? 'old' : ''}" title="${esc(new Date(r.since).toLocaleString())}">${humanAge(r.since, now)}</span>
+      <button class="done-btn" data-n="${it.n}" title="Hide until something new happens">${r.done ? 'Undo' : 'Done'}</button>
+    </li>`;
+  }).join('') + (listRows.length > state.limit ? `<li class="more"><button id="more">Show ${listRows.length - state.limit} more</button></li>` : '');
+  ul.onclick = (e) => {
+    if (e.target.id === 'more') { state.limit += 100; renderList(now); return; }
+    const n = e.target.closest('.done-btn')?.dataset.n;
+    if (n) toggleDone(data.items.find((i) => String(i.n) === n));
+  };
+}
+
+// keyboard: j/k move, o open, d done
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey || !listRows.length) return;
+  const visible = Math.min(listRows.length, state.limit);
+  if (e.key === 'j' || e.key === 'k') {
+    state.sel = Math.max(0, Math.min(visible - 1, state.sel + (e.key === 'j' ? 1 : -1)));
+    document.querySelectorAll('#items li[data-idx]').forEach((li) => li.classList.toggle('sel', +li.dataset.idx === state.sel));
+    document.querySelector(`#items li[data-idx="${state.sel}"]`)?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'o') {
+    document.querySelector(`#items li[data-idx="${state.sel}"] a`)?.click();
+  } else if (e.key === 'd') {
+    const r = listRows[state.sel]; if (r) toggleDone(r.item);
+  }
+});
+
+// ---------------- load ----------------
+async function load(first) {
+  try {
+    const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+    for (const i of data.items) i.url ||= `https://github.com/${data.repo.split(' ')[0]}/${i.t === 'pr' ? 'pull' : 'issues'}/${i.n}`;
+    const ageMin = (Date.now() - Date.parse(data.generatedAt)) / 60000;
+    $('#fresh').textContent = `${data.repo} · ${data.items.length} open · data ${humanAge(data.generatedAt, Date.now())} old`;
+    $('#fresh').classList.toggle('stale', ageMin > 180);
+    $('#foot').innerHTML = `New layout preview. The classic view is still at <a href="./${location.search}">index.html</a>. "Done", your settings and your last visit are stored in this browser only.`;
+    if (first && state.user) readVisit();
+    render();
+  } catch (err) {
+    $('#fresh').textContent = `Could not load data (${err.message})`;
+  }
+}
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+load(true);
+setInterval(() => load(false), 5 * 60 * 1000);
+</script>
+</body>
+</html>
