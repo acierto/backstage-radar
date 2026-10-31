@@ -26,5 +26,6 @@ export async function loadSubscribers(path = 'subscribers.yml') {
     areas: (s.areas || []).map((a) => String(a).toLowerCase()),
     teams: (s.teams || []).map((t) => String(t).toLowerCase()),
     digest: s.digest !== false,
+    email: s.email === true,
   }));
 }

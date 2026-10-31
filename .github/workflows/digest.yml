@@ -1,4 +1,4 @@
-name: Daily email digest
+name: Daily digest
 
 on:
   schedule:
@@ -12,14 +12,15 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   digest:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -29,9 +30,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RADAR_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Send digests
-        run: node src/digest.mjs --data site/data.json ${{ inputs.only && format('--only {0}', inputs.only) || '' }}
+        run: node src/digest.mjs --data site/data.json ${ONLY:+--only "$ONLY"}
         env:
+          ONLY: ${{ inputs.only }}
+          # Posts the digest comments in this repo (built-in token, issues: write).
+          POST_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional, only for subscribers with `email: true`.
           SMTP_URL: ${{ secrets.SMTP_URL }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           SUBSCRIBER_EMAILS: ${{ secrets.SUBSCRIBER_EMAILS }}
-          GITHUB_TOKEN: ${{ secrets.RADAR_TOKEN || secrets.GITHUB_TOKEN }}

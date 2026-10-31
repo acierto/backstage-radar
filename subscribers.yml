@@ -1,14 +1,17 @@
-# People who get the daily email digest.
+# People who get the daily digest.
 # The dashboard itself needs no entry here: anyone can open it and pick their name and areas.
+#
+# How the digest reaches you: each weekday a comment lands on your own issue in this repo
+# ("Daily digest for @you") and @mentions you, so GitHub emails it to your own address.
+# Nothing to configure. Close that issue to pause, reopen to resume.
 #
 # user:   your GitHub login
 # areas:  area labels without the "area:" prefix, or [all] for every area (core maintainers)
 # teams:  optional team slugs whose review requests / @mentions count as pinging you
 #         (e.g. scaffolder-maintainers for @backstage/scaffolder-maintainers)
-# digest: set to false to stay listed but pause the email
-#
-# Email addresses are NOT stored here. They come from the SUBSCRIBER_EMAILS repository secret,
-# or from your public GitHub profile email if you have one.
+# digest: set to false to stay listed but skip the digest
+# email:  optional, true = ALSO send a direct email (only if the host configured SMTP; the address
+#         comes from the SUBSCRIBER_EMAILS secret or your public GitHub profile email)
 
 subscribers:
   - user: acierto

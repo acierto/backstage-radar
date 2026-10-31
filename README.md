@@ -1,11 +1,11 @@
 # Backstage Radar
 
-A shared dashboard plus a daily email that answers one question for everyone who works on
+A shared dashboard plus a daily digest that answers one question for everyone who works on
 [backstage/backstage](https://github.com/backstage/backstage):
 
 > **Where am I needed, and where haven't I replied yet?**
 
-It replaces hundreds of GitHub notification emails with one page and at most one email per day.
+It replaces hundreds of GitHub notification emails with one page and at most one digest email per day.
 
 ## What it shows
 
@@ -32,11 +32,12 @@ GitHub Action (every 30 min)            GitHub Pages
   src/collect.mjs  ──►  data.json  ──►  site/index.html  (personalised in the browser)
                                          site/logic.js   (shared rules)
 GitHub Action (weekdays 07:23)
-  src/collect.mjs + src/digest.mjs ──►  one email per subscriber
+  src/collect.mjs + src/digest.mjs ──►  a comment on each subscriber's digest issue
+                                         (GitHub emails it to them)
 ```
 
 * **One collection for everyone.** The job reads all open issues and PRs once through the GraphQL API: comments, reviews, review comments, pushes, review requests and labels. It keeps only *who did what, when, and whom they mentioned*, not the text.
-* **Personalisation happens in the browser**, using the same `site/logic.js` that the email digest uses. The page and the mail always agree.
+* **Personalisation happens in the browser**, using the same `site/logic.js` that the daily digest uses. The page and the digest always agree.
 * Mentions inside code blocks and quoted replies (`> @someone said…`) don't count as pings.
 * Bot accounts (`*[bot]` plus the list in `config.yml`) never count as "someone replied".
 
@@ -45,27 +46,28 @@ GitHub Action (weekdays 07:23)
 1. Create a repo (for example `backstage-radar`) and push this folder to `main`.
 2. **Settings → Pages → Source: GitHub Actions.**
 3. Run **Actions → Collect & publish dashboard → Run workflow**. After 2–3 minutes the dashboard is live at `https://<owner>.github.io/backstage-radar/`.
-4. Put that URL in `config.yml → dashboardUrl` so digest emails link to it.
+4. Put that URL in `config.yml → dashboardUrl` so digests link to it.
 5. *(Recommended)* Add a `RADAR_TOKEN` secret: a fine-grained PAT with **public repositories, read-only** access. The built-in token works, but has a lower rate limit.
 
-### Email digest
+### Daily digest
 
-Add these repository secrets:
+Nothing to configure. Each weekday the **Daily digest** workflow posts a comment on a per-person
+issue in this repo ("Daily digest for @login") that @mentions the subscriber, so **GitHub emails it to
+their own address** under their own notification settings. No addresses or SMTP are stored anywhere.
 
-| Secret | Example |
-|---|---|
-| `SMTP_URL` | `smtps://you%40gmail.com:app-password@smtp.gmail.com:465` (Gmail needs an [app password](https://support.google.com/accounts/answer/185833)); any SMTP provider works (Resend, SES, Postmark…) |
-| `MAIL_FROM` | `Backstage Radar <you@gmail.com>` |
-| `SUBSCRIBER_EMAILS` | `{"acierto": "you@example.com", "someone": "them@example.com"}` |
+* Links in the digest go through `redirect.github.com` (as Dependabot does), so backstage issues and PRs
+  don't get "mentioned this" backlinks.
+* Test it with **Actions → Daily digest → Run workflow → only: `your-login`**.
 
-Email addresses never go in the repo. If a subscriber has no entry in `SUBSCRIBER_EMAILS`, the job falls back to their **public** GitHub profile email, if they have one.
-
-Test with **Actions → Daily email digest → Run workflow → only: `acierto`**.
+**Optional direct email.** For subscribers who set `email: true`, the digest is *also* sent by SMTP if
+the host adds these secrets: `SMTP_URL` (e.g. `smtps://user:app-password@smtp.gmail.com:465`),
+`MAIL_FROM`, and optionally `SUBSCRIBER_EMAILS` (`{"login": "address"}`; otherwise the public profile
+email is used).
 
 ## Joining (for everyone else)
 
 * **Dashboard only:** just open the URL. Nothing to sign up for.
-* **Daily email:** open a PR that adds yourself to `subscribers.yml`:
+* **Daily digest:** open a PR that adds yourself to `subscribers.yml`:
 
   ```yaml
   - user: your-login
@@ -73,9 +75,9 @@ Test with **Actions → Daily email digest → Run workflow → only: `acierto`*
     teams: [catalog-maintainers] # optional: team pings count as yours
   ```
 
-  Then ask the host to add your address to `SUBSCRIBER_EMAILS`, or make your GitHub profile email public.
-
-The digest skips you on days with nothing to report. It lists everything still waiting on you, plus new area items from the last 24h.
+  Your issue appears with the first digest. **Close it to pause, reopen to resume.** A day with
+  nothing to report gets no comment. The digest lists everything still waiting on you, plus new area
+  items from the last 24h.
 
 ## Cut the email noise from GitHub itself
 
@@ -90,7 +92,7 @@ npm run demo-data               # fake data in site/data.json
 npm run serve                   # http://localhost:8080/?user=acierto&areas=scaffolder
 
 GITHUB_TOKEN=$(gh auth token) npm run collect   # real data (2–4 min)
-npm run digest:dry              # writes out/digests/<user>.html instead of sending
+npm run digest:dry              # writes out/digests/<user>.md instead of posting
 ```
 
 ## Limits worth knowing
