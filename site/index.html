@@ -83,6 +83,49 @@
   .iam-x { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--panel-2); color: var(--ink-2); font-size: 16px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
   .iam-x:hover { background: var(--line); color: var(--ink); }
   @media (hover: none) { .iam-x { width: 30px; height: 30px; font-size: 18px; } }
+  .nf { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 40px; align-items: center; margin-top: 28px; padding: 32px 36px; border-radius: 20px; border: 1px solid var(--line); background:
+      radial-gradient(420px 260px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+      radial-gradient(420px 260px at 100% 100%, color-mix(in srgb, var(--question) 12%, transparent), transparent 70%),
+      var(--panel); }
+  .nf-art { position: relative; width: 100%; max-width: 300px; aspect-ratio: 1; margin: 0 auto; }
+  .nf-rings { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .nf-rings circle { fill: none; stroke: var(--line-2); stroke-dasharray: 3 6; }
+  .nf-me { position: absolute; left: 50%; top: 50%; width: 34%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--review), var(--question)); box-shadow: 0 0 0 6px var(--panel), 0 0 0 7px var(--line-2), 0 14px 34px color-mix(in srgb, var(--question) 35%, transparent); }
+  .nf-me span { font: 800 46px/1 var(--font-display); color: #fff; }
+  .nf-orb { position: absolute; transform: translate(-50%, -50%); width: var(--s); height: var(--s); padding: 0; border: 0; border-radius: 50%; background: var(--panel); box-shadow: 0 0 0 3px var(--panel), 0 6px 16px rgba(10,14,20,.18); cursor: pointer; transition: transform .15s; }
+  .nf-orb:hover { transform: translate(-50%, -50%) scale(1.12); }
+  .nf-orb img, .nf-orb .ph { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: 11px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .nf-me { animation: nf-pop .5s cubic-bezier(.2,1.5,.4,1) backwards; }
+    .nf-orb { animation: nf-in .4s ease-out backwards; }
+    .nf-orb:nth-of-type(2) { animation-delay: .06s; } .nf-orb:nth-of-type(3) { animation-delay: .12s; } .nf-orb:nth-of-type(4) { animation-delay: .18s; } .nf-orb:nth-of-type(5) { animation-delay: .24s; } .nf-orb:nth-of-type(6) { animation-delay: .3s; }
+  }
+  @keyframes nf-pop { from { transform: translate(-50%, -50%) scale(.5); opacity: 0; } }
+  @keyframes nf-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.6); } }
+  .nf-copy .headline { margin: 6px 0 8px; word-break: break-word; }
+  .nf-lead { margin: 0 0 16px; color: var(--ink-2); font-size: 15px; max-width: 56ch; }
+  .nf-sugg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .nf-pick { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 8px 12px 8px 8px; cursor: pointer; color: var(--ink); transition: border-color .12s, transform .12s, box-shadow .12s; }
+  .nf-pick:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 16%, transparent); }
+  .nf-pick img, .nf-pick .ph { width: 36px; height: 36px; border-radius: 50%; font-size: 11px; }
+  .nf-who { display: flex; flex-direction: column; min-width: 0; }
+  .nf-login { font: 600 14px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nf-login mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .nf-meta { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nf-go { color: var(--ink-3); }
+  .nf-pick:hover .nf-go { color: var(--accent); }
+  .nf-none { padding: 12px 14px; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--ink-2); font-size: 14px; }
+  .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line-2); }
+  .nf-foot .nf-retry { width: auto; flex: none; padding: 8px 16px; }
+  .nf-tips { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-3); flex: 1; min-width: 240px; }
+  @media (max-width: 760px) {
+    .nf { grid-template-columns: 1fr; gap: 18px; padding: 22px 18px; margin-top: 18px; }
+    .nf-art { max-width: 150px; }
+    .nf-me span { font-size: 26px; }
+    .nf-orb { --s: 30px !important; }
+    .nf-sugg { grid-template-columns: 1fr; }
+    .nf-copy { text-align: left; }
+  }
   .nf-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
   .nf-list button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: var(--panel); border-radius: 999px; padding: 4px 14px 4px 4px; font: 600 14px var(--font-mono); color: var(--ink); cursor: pointer; }
   .nf-list button:hover { border-color: var(--accent); color: var(--accent); }
@@ -594,8 +637,15 @@ function suggestions(q, n = 5) {
     for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
     return d[a.length][b.length];
   };
-  return all.map((u) => ({ u, score: u.startsWith(q) ? 0 : u.includes(q) ? 1 : dist(q, u.slice(0, Math.max(q.length, 3))) + 2 }))
-    .filter((x) => x.score <= 4)
+  // Exact parts of the login first; spelling-tolerant matches only once there's enough to go on.
+  const maxTypos = q.length >= 7 ? 2 : q.length >= 4 ? 1 : -1;
+  return all.map((u) => {
+    if (u.startsWith(q)) return { u, score: 0 };
+    if (u.includes(q)) return { u, score: 1 };
+    const d = Math.min(dist(q, u), dist(q, u.slice(0, q.length)));
+    return { u, score: d <= maxTypos ? 2 + d : 99 };
+  })
+    .filter((x) => x.score < 99)
     .sort((a, b) => a.score - b.score || a.u.length - b.u.length || a.u.localeCompare(b.u))
     .slice(0, n).map((x) => x.u);
 }
@@ -914,6 +964,64 @@ function lanes(now) {
   </div>`;
 }
 
+// ---------------- unknown login ----------------
+function userFacts(login, now) {
+  const who = lc(login);
+  let open = 0, last = null;
+  for (const it of rawData.items) {
+    if (lc(it.author) === who) open++;
+    for (const e of it.ev) if (lc(e[1]) === who && (!last || e[0] > last)) last = e[0];
+  }
+  return [open ? `${open} open ${open === 1 ? 'item' : 'items'}` : null, last ? `active ${humanAge(last, now)} ago` : 'mentioned in a thread'].filter(Boolean).join(' · ');
+}
+function highlight(login, q) {
+  const i = login.indexOf(q);
+  if (!q || i < 0) return esc(login);
+  return `${esc(login.slice(0, i))}<mark>${esc(login.slice(i, i + q.length))}</mark>${esc(login.slice(i + q.length))}`;
+}
+function renderNotFound(main, now) {
+  const q = state.user;
+  const sugg = suggestions(q, 6);
+  document.title = 'Backstage Radar';
+  // Up to five matches sit around the empty profile, at fixed spots.
+  const SPOTS = [[18, 22, 46], [80, 16, 40], [88, 66, 44], [14, 78, 38], [52, 92, 34]];
+  const orbit = sugg.slice(0, 5).map((u, i) => {
+    const [x, y, size] = SPOTS[i];
+    return `<button class="nf-orb" data-pick="${esc(u)}" style="left:${x}%;top:${y}%;--s:${size}px" title="@${esc(u)}" aria-label="Use @${esc(u)}">${avatar(u, size)}</button>`;
+  }).join('');
+  const repo = esc(data.repo.split(' ')[0]);
+  main.innerHTML = `
+    <section class="nf">
+      <div class="nf-art" aria-hidden="${sugg.length ? 'false' : 'true'}">
+        <svg class="nf-rings" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="92" /><circle cx="100" cy="100" r="66" /><circle cx="100" cy="100" r="40" />
+        </svg>
+        <div class="nf-me"><span>?</span></div>
+        ${orbit}
+      </div>
+      <div class="nf-copy">
+        <div class="eyebrow">No match yet</div>
+        <h1 class="headline">Can't find <em>@${esc(q)}</em></h1>
+        <p class="nf-lead">Nobody with that login is active in open <b>${repo}</b> issues or pull requests right now.${sugg.length ? ' Did you mean one of these?' : ''}</p>
+        ${sugg.length ? `<div class="nf-sugg">${sugg.map((u) => `
+          <button class="nf-pick" data-pick="${esc(u)}">
+            ${avatar(u, 36)}
+            <span class="nf-who"><span class="nf-login">@${highlight(u, q)}</span><span class="nf-meta">${esc(userFacts(u, now))}</span></span>
+            <span class="nf-go" aria-hidden="true">→</span>
+          </button>`).join('')}</div>` : `<div class="nf-none">No similar logins found.</div>`}
+        <div class="nf-foot">
+          <button class="pm-btn nf-retry" id="nf-retry">Try another name</button>
+          <ul class="nf-tips">
+            <li>Logins aren't case-sensitive.</li>
+            <li>People show up once they open, comment on, review or are mentioned in an open issue or PR.</li>
+          </ul>
+        </div>
+      </div>
+    </section>`;
+  main.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => { userEl.value = b.dataset.pick; clearTimeout(typing); setUser(b.dataset.pick); }));
+  $('#nf-retry').onclick = () => { userEl.select(); userEl.focus(); };
+}
+
 // ---------------- inbox zero ----------------
 const CHEERS = [
   ['All caught up', 'Nobody is waiting on you. Every ask has an answer.'],
@@ -1155,16 +1263,7 @@ function renderInner() {
     return;
   }
   if (!isKnown(state.user)) {
-    const sugg = suggestions(state.user);
-    document.title = 'Backstage Radar';
-    main.innerHTML = `<section class="hero" style="grid-template-columns:1fr"><div>
-      <div class="eyebrow">No match yet</div>
-      <h1 class="headline">Can't find <em>@${esc(state.user)}</em></h1>
-      <div class="nf-card">
-        <p>Radar only knows people who are active in open <b>${esc(data.repo.split(' ')[0])}</b> issues and pull requests: authors, commenters, reviewers and anyone mentioned. Check the spelling, or pick one of these:</p>
-        ${sugg.length ? `<div class="nf-list">${sugg.map((u) => `<button data-pick="${esc(u)}">${avatar(u, 28)}@${esc(u)}</button>`).join('')}</div>` : '<p style="margin-top:10px">No similar logins found.</p>'}
-      </div></div></section>`;
-    main.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => { userEl.value = b.dataset.pick; clearTimeout(typing); setUser(b.dataset.pick); }));
+    renderNotFound(main, now);
     return;
   }
   rows = build(now);
