@@ -80,6 +80,15 @@
   .iam label { font-size: 12px; color: var(--ink-3); }
   .iam input { background: transparent; border: 0; width: 130px; font: 600 14px var(--font-mono); padding: 2px 2px; }
   .iam input::placeholder { color: var(--ink-3); font-weight: 400; }
+  .iam-x { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--panel-2); color: var(--ink-2); font-size: 16px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+  .iam-x:hover { background: var(--line); color: var(--ink); }
+  @media (hover: none) { .iam-x { width: 30px; height: 30px; font-size: 18px; } }
+  .nf-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .nf-list button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: var(--panel); border-radius: 999px; padding: 4px 14px 4px 4px; font: 600 14px var(--font-mono); color: var(--ink); cursor: pointer; }
+  .nf-list button:hover { border-color: var(--accent); color: var(--accent); }
+  .nf-list img, .nf-list .ph { width: 28px; height: 28px; border-radius: 50%; font-size: 10px; }
+  .nf-card { max-width: 640px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+  .nf-card p { margin: 0; color: var(--ink-2); }
   .bar .spacer { flex: 1; }
   .icon-btn { background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
   .icon-btn:hover { border-color: var(--accent); }
@@ -481,7 +490,8 @@
     <div class="iam">
       <span class="ph" id="me-ph" aria-hidden="true"></span>
       <label for="user">I am @</label>
-      <input id="user" placeholder="your-login" autocomplete="off" spellcheck="false">
+      <input id="user" placeholder="your-login" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+      <button class="iam-x" id="user-clear" type="button" aria-label="Clear login" title="Clear" hidden>×</button>
     </div>
     <span class="spacer"></span>
     <div class="pop" id="status-pop">
@@ -562,6 +572,33 @@ const state = {
   showBots: params.has('bots') ? params.get('bots') === '1' : store.get('radar:bots', false),
 };
 let data = null, rawData = null, rows = [], boardRows = [], lastVisit = null;
+// Everyone who appears in the scan: authors, commenters, reviewers, mentioned and requested people.
+let known = null;
+function knownUsers() {
+  if (known) return known;
+  known = new Set();
+  for (const it of rawData?.items || []) {
+    known.add(lc(it.author));
+    it.reviewers.forEach((r) => known.add(lc(r)));
+    for (const e of it.ev) { known.add(lc(e[1])); (e[3] || []).forEach((u) => known.add(lc(u))); }
+  }
+  Object.keys(rawData?.defaults || {}).forEach((u) => known.add(lc(u)));
+  return known;
+}
+const isKnown = (login) => !!login && knownUsers().has(lc(login));
+function suggestions(q, n = 5) {
+  const all = [...knownUsers()].filter((u) => u && u !== 'ghost' && !/\[bot\]$/.test(u));
+  const dist = (a, b) => { // small Levenshtein, enough for typos
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  };
+  return all.map((u) => ({ u, score: u.startsWith(q) ? 0 : u.includes(q) ? 1 : dist(q, u.slice(0, Math.max(q.length, 3))) + 2 }))
+    .filter((x) => x.score <= 4)
+    .sort((a, b) => a.score - b.score || a.u.length - b.u.length || a.u.localeCompare(b.u))
+    .slice(0, n).map((x) => x.u);
+}
 // Bots (Copilot reviews, Dependabot, …) are hidden by default: their activity doesn't count as a reply or ping.
 const applyBots = () => { data = state.showBots ? rawData : withoutBots(rawData); };
 
@@ -712,7 +749,22 @@ const userEl = $('#user');
 userEl.value = state.user;
 function paintMe() { $('#me-ph').outerHTML = `<span id="me-ph" style="display:contents">${state.user ? avatar(state.user, 26) : '<span class="ph"></span>'}</span>`; }
 let typing;
-userEl.oninput = () => { clearTimeout(typing); typing = setTimeout(() => { state.user = lc(userEl.value.trim().replace(/^@/, '')); applyDefaults(); renderTeams(); savePrefs(); readVisit(); paintMe(); paintScanLink(); render(); }, 400); };
+function setUser(login) {
+  state.user = lc((login || '').trim().replace(/^@/, ''));
+  $('#user-clear').hidden = !userEl.value;
+  applyDefaults(); renderTeams(); savePrefs();
+  if (data && isKnown(state.user)) readVisit(); // don't remember visits for half-typed names
+  paintMe(); paintScanLink(); render();
+}
+// Wait for a pause in typing (longer on phones) before updating the page.
+userEl.oninput = () => {
+  $('#user-clear').hidden = !userEl.value;
+  clearTimeout(typing);
+  typing = setTimeout(() => setUser(userEl.value), matchMedia('(hover: none)').matches ? 900 : 600);
+};
+userEl.onkeydown = (e) => { if (e.key === 'Enter') { clearTimeout(typing); setUser(userEl.value); userEl.blur(); } };
+$('#user-clear').onclick = () => { userEl.value = ''; clearTimeout(typing); setUser(''); userEl.focus(); };
+$('#user-clear').hidden = !userEl.value;
 
 // ---------------- popovers (status, area picker) ----------------
 let openPop = null;
@@ -1100,6 +1152,19 @@ function renderInner() {
       <h1 class="headline">Who's waiting on <em>you</em>?</h1>
       <p style="color:var(--ink-2)">Type your GitHub login in the bar above and pick the areas you look after. Your choice is kept in this browser and in the page link.</p></div></section>`;
     userEl.focus();
+    return;
+  }
+  if (!isKnown(state.user)) {
+    const sugg = suggestions(state.user);
+    document.title = 'Backstage Radar';
+    main.innerHTML = `<section class="hero" style="grid-template-columns:1fr"><div>
+      <div class="eyebrow">No match yet</div>
+      <h1 class="headline">Can't find <em>@${esc(state.user)}</em></h1>
+      <div class="nf-card">
+        <p>Radar only knows people who are active in open <b>${esc(data.repo.split(' ')[0])}</b> issues and pull requests: authors, commenters, reviewers and anyone mentioned. Check the spelling, or pick one of these:</p>
+        ${sugg.length ? `<div class="nf-list">${sugg.map((u) => `<button data-pick="${esc(u)}">${avatar(u, 28)}@${esc(u)}</button>`).join('')}</div>` : '<p style="margin-top:10px">No similar logins found.</p>'}
+      </div></div></section>`;
+    main.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => { userEl.value = b.dataset.pick; clearTimeout(typing); setUser(b.dataset.pick); }));
     return;
   }
   rows = build(now);
@@ -1492,7 +1557,7 @@ async function load(first) {
     const repo = data.repo.split(' ')[0];
     for (const i of data.items) i.url ||= `https://github.com/${repo}/${i.t === 'pr' ? 'pull' : 'issues'}/${i.n}`;
     const hidden = await dropClosedSinceScan(repo);
-    rawData = data; applyBots();
+    rawData = data; known = null; applyBots();
     $('#repo').textContent = data.repo;
     const age = (Date.now() - Date.parse(data.generatedAt)) / 60000;
     const now = Date.now();
