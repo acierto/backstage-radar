@@ -82,7 +82,7 @@
   .iam input::placeholder { color: var(--ink-3); font-weight: 400; }
   .iam-x { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--panel-2); color: var(--ink-2); font-size: 16px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
   .iam-x:hover { background: var(--line); color: var(--ink); }
-  @media (hover: none) { .iam-x { width: 30px; height: 30px; font-size: 18px; } }
+  @media (hover: none) { .iam-x { width: 30px; height: 30px; font-size: 18px; position: relative; } .iam-x::before { content: ""; position: absolute; inset: -8px; } }
   .nf { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 40px; align-items: center; margin-top: 28px; padding: 32px 36px; border-radius: 20px; border: 1px solid var(--line); background:
       radial-gradient(420px 260px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
       radial-gradient(420px 260px at 100% 100%, color-mix(in srgb, var(--question) 12%, transparent), transparent 70%),
