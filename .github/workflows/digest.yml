@@ -18,11 +18,19 @@ on:
 permissions:
   contents: read
   issues: write
+  # The digest also republishes the dashboard with the data it just collected, so the
+  # "Open your dashboard" link shows the same items as the email even when GitHub has
+  # skipped the scheduled collect runs.
+  pages: write
+  id-token: write
 
 jobs:
   digest:
     runs-on: ${{ inputs.runner == 'hosted' && 'ubuntu-latest' || fromJSON('["self-hosted","linux","ARM64","oracle"]') }}
     timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -44,3 +52,14 @@ jobs:
           SMTP_URL: ${{ secrets.SMTP_URL }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           SUBSCRIBER_EMAILS: ${{ secrets.SUBSCRIBER_EMAILS }}
+      # After sending, so a Pages hiccup never blocks the digest itself.
+      - name: Publish the same data to the dashboard
+        if: ${{ !cancelled() }}
+        uses: actions/configure-pages@v5
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        if: ${{ !cancelled() }}
+        uses: actions/deploy-pages@v4

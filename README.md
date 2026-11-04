@@ -51,6 +51,7 @@ GitHub Action (every 30 min)            GitHub Pages
 GitHub Action (weekdays 07:23)
   src/collect.mjs + src/digest.mjs ──►  a comment on each subscriber's digest issue
                                          (GitHub emails it to them)
+                                   └──►  republishes the dashboard with the same data.json
 ```
 
 * **One collection for everyone.** The job reads all open issues and PRs once through the GraphQL API: comments, reviews, review comments, pushes, review requests and labels. It keeps only *who did what, when, and whom they mentioned*, not the text.
@@ -74,6 +75,9 @@ their own address** under their own notification settings. No addresses or SMTP 
 
 * Links in the digest go through `redirect.github.com` (as Dependabot does), so backstage issues and PRs
   don't get "mentioned this" backlinks.
+* The digest also redeploys the dashboard with the data it just collected. GitHub often skips
+  scheduled runs for hours, and without this the "Open your dashboard" link could show older data
+  than the email.
 * Test it with **Actions → Daily digest → Run workflow → only: `your-login`**.
 
 **Optional direct email.** For subscribers who set `email: true`, the digest is *also* sent by SMTP if
