@@ -1,4 +1,6 @@
 name: Daily digest
+# Test runs get their own name, so the ticker only counts real digests.
+run-name: ${{ inputs.only && format('Digest test for {0}', inputs.only) || 'Daily digest' }}
 
 on:
   schedule:

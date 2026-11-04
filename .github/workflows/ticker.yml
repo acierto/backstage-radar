@@ -5,6 +5,8 @@ name: Ticker
 # GitHub-hosted runner (free for public repos) and, every 15 minutes:
 #   * dispatches collect.yml when the last collect run is 25+ minutes old,
 #   * dispatches runner-watchdog.yml,
+#   * on weekdays from 06:30 UTC, dispatches digest.yml if no real digest has succeeded today
+#     (at most 3 attempts a day; the digest's own once-a-day marker prevents double sends),
 #   * keeps one "dashboard-stale" issue open while the published data is over 2 hours old.
 # Before it exits it dispatches its own successor, so the chain does not depend on cron at all.
 # The hourly schedule is only a backstop to restart the chain if it ever breaks.
@@ -39,6 +41,8 @@ jobs:
       COLLECT_EVERY_SECONDS: 1500  # dispatch collect when the last one started 25+ min ago
       STALE_AFTER_SECONDS: 7200
       STALE_LABEL: dashboard-stale
+      DIGEST_AFTER_UTC: '0630'
+      DIGEST_MAX_ATTEMPTS: 3
     steps:
       - uses: actions/checkout@v5
         with:
@@ -65,6 +69,22 @@ jobs:
             fi
 
             gh workflow run runner-watchdog.yml --ref "$REF" && echo "Dispatched watchdog."
+
+            # Digest backstop: GitHub sometimes starts the 06:23 cron hours late, or not at all.
+            if [ "$(date -u +%u)" -le 5 ] && [ "$(date -u +%H%M)" -ge "$DIGEST_AFTER_UTC" ]; then
+              day=$(date -u +%Y-%m-%d)
+              # Real digests only ("Digest test for …" runs are excluded by name).
+              read -r ok attempts < <(gh api "repos/$GH_REPO/actions/workflows/digest.yml/runs?created=>=${day}T00:00:00Z&per_page=50" \
+                --jq '[.workflow_runs[] | select(.display_title == "Daily digest")]
+                      | "\([.[] | select(.conclusion == "success" or .conclusion == null)] | length) \(length)"')
+              if [ "${ok:-0}" -gt 0 ]; then
+                echo "Digest already ran or is running today."
+              elif [ "${attempts:-0}" -ge "$DIGEST_MAX_ATTEMPTS" ]; then
+                echo "::warning::Digest failed $attempts times today; not retrying."
+              else
+                gh workflow run digest.yml --ref "$REF" && echo "Dispatched digest (attempt $(( ${attempts:-0} + 1 )))."
+              fi
+            fi
 
             generated=$(curl -fsS "$data_url?t=$now" | jq -r '.generatedAt // empty')
             open=$(gh issue list --label "$STALE_LABEL" --state open --json number --jq '.[0].number // empty')

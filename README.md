@@ -102,6 +102,9 @@ GitHub drops most cron runs in a quiet repo, so the cron lines are only a backst
 dispatches **Collect** (when the last one is 25+ min old) and **Runner watchdog**. Before exiting it
 dispatches the next Ticker, so the chain keeps itself going; an hourly cron restarts it if it ever breaks.
 It also keeps a `dashboard-stale` issue open while the published data is more than 2 hours old.
+On weekdays from 06:30 UTC it also starts the **Daily digest** if no real digest has succeeded that day (at most
+3 attempts). Each digest comment carries a hidden date marker and a run skips anyone already sent that day,
+so a late cron run never sends a second digest. Test runs (`only: login`) neither add nor check the marker.
 Pages deploys retry once after 3 minutes, because Pages sometimes reports a finished deploy as still in progress.
 If the chain stops, start it with **Actions → Ticker → Run workflow**. Cancelling a Ticker run ends the chain
 until the next hourly backstop.

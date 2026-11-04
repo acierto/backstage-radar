@@ -27,6 +27,11 @@ const cutoff = new Date(now - config.digest.lookbackHours * 60 * 60 * 1000).toIS
 const token = process.env.POST_TOKEN || process.env.GITHUB_TOKEN;
 const selfRepo = process.env.GITHUB_REPOSITORY || config.selfRepo;
 const LABEL = 'radar-digest';
+// Hidden marker on every regular digest comment. A run skips anyone whose issue already has today's
+// marker, so a late cron run after the ticker's dispatch (or a retry) never sends a second digest.
+// `--only` test runs neither add nor check it, so a test never blocks the real digest.
+const today = new Date(now).toISOString().slice(0, 10);
+const MARKER = `<!-- radar-digest ${today} -->`;
 
 // ---------- content ----------
 function dashboardLink(s) {
@@ -138,6 +143,13 @@ async function digestIssues() {
   return issueIndex;
 }
 
+async function sentToday(s) {
+  const issue = (await digestIssues()).get(s.user);
+  if (!issue) return false;
+  const comments = await gh('GET', `/repos/${selfRepo}/issues/${issue.number}/comments?since=${today}T00:00:00Z&per_page=100`);
+  return comments.some((c) => c.body?.includes(MARKER));
+}
+
 async function postToIssue(s, markdown) {
   await gh('POST', `/repos/${selfRepo}/labels`, { name: LABEL, color: '2a78d6', description: 'Personal Backstage Radar digest' });
   const issues = await digestIssues();
@@ -198,7 +210,11 @@ for (const s of subscribers) {
     continue;
   }
   try {
-    const results = [await postToIssue(s, md)];
+    if (!only && (await sentToday(s))) {
+      console.log(`@${s.user}: already sent today, skipping`);
+      continue;
+    }
+    const results = [await postToIssue(s, only ? md : `${md}\n\n${MARKER}`)];
     if (s.email) results.push(await sendEmail(s, d));
     console.log(`@${s.user}: ${d.subject} — ${results.join(', ')}`);
   } catch (err) {
