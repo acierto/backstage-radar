@@ -24,6 +24,11 @@ permissions:
   pages: write
   id-token: write
 
+# Same group as collect.yml: both deploy Pages, and GitHub rejects a deploy while another is running.
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
 jobs:
   digest:
     runs-on: ${{ inputs.runner == 'hosted' && 'ubuntu-latest' || fromJSON('["self-hosted","linux","ARM64","oracle"]') }}
