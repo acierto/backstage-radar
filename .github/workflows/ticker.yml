@@ -1,0 +1,104 @@
+name: Ticker
+
+# GitHub drops most scheduled runs in a quiet repo (collect, set to every 30 minutes, ran 3 times
+# on some days). This workflow is the clock instead: one run stays alive for ~5h45m on a
+# GitHub-hosted runner (free for public repos) and, every 15 minutes:
+#   * dispatches collect.yml when the last collect run is 25+ minutes old,
+#   * dispatches runner-watchdog.yml,
+#   * keeps one "dashboard-stale" issue open while the published data is over 2 hours old.
+# Before it exits it dispatches its own successor, so the chain does not depend on cron at all.
+# The hourly schedule is only a backstop to restart the chain if it ever breaks.
+# Uses only the built-in token: workflow_dispatch is the one event that token is allowed to trigger.
+
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write   # dispatch workflows
+  issues: write    # stale-data alert
+  contents: read
+
+# One ticker at a time. A backstop run that arrives while one is running waits as "pending" and
+# becomes the successor (GitHub keeps at most one pending run and cancels older ones).
+concurrency:
+  group: ticker
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      REF: ${{ github.event.repository.default_branch }}
+      RUN_FOR_SECONDS: 20700       # 5h45m, inside the 6h limit for GitHub-hosted jobs
+      TICK_SECONDS: 900
+      COLLECT_EVERY_SECONDS: 1500  # dispatch collect when the last one started 25+ min ago
+      STALE_AFTER_SECONDS: 7200
+      STALE_LABEL: dashboard-stale
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: config.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Tick every 15 minutes
+        run: |
+          set -uo pipefail   # no -e: one failed call must not end the loop
+          url=$(sed -nE "s/^dashboardUrl: *'?([^' ]+)'?.*/\1/p" config.yml)
+          data_url="${url%/}/data.json"
+          end=$(( $(date +%s) + RUN_FOR_SECONDS ))
+
+          tick() {
+            now=$(date +%s)
+
+            last=$(gh api "repos/$GH_REPO/actions/workflows/collect.yml/runs?per_page=1" \
+              --jq '.workflow_runs[0].created_at // empty')
+            age=$(( now - $( [ -n "$last" ] && date -d "$last" +%s || echo 0 ) ))
+            if [ "$age" -ge "$COLLECT_EVERY_SECONDS" ]; then
+              gh workflow run collect.yml --ref "$REF" && echo "Dispatched collect (last one $((age / 60)) min ago)."
+            else
+              echo "Collect started $((age / 60)) min ago; skipping."
+            fi
+
+            gh workflow run runner-watchdog.yml --ref "$REF" && echo "Dispatched watchdog."
+
+            generated=$(curl -fsS "$data_url?t=$now" | jq -r '.generatedAt // empty')
+            open=$(gh issue list --label "$STALE_LABEL" --state open --json number --jq '.[0].number // empty')
+            if [ -z "$generated" ]; then
+              echo "::warning::Could not read $data_url"
+              return
+            fi
+            data_age=$(( now - $(date -d "$generated" +%s) ))
+            echo "Published data is $((data_age / 60)) min old."
+            if [ "$data_age" -gt "$STALE_AFTER_SECONDS" ] && [ -z "$open" ]; then
+              runs=$(gh run list -w collect.yml -L 5 --json conclusion,event,createdAt,url \
+                --jq '.[] | "- \(.createdAt) \(.event): \(.conclusion // "running") \(.url)"')
+              gh label create "$STALE_LABEL" --color D93F0B --description "Dashboard data is out of date" --force >/dev/null
+              gh issue create --label "$STALE_LABEL" --assignee "$GITHUB_REPOSITORY_OWNER" \
+                --title "Dashboard data is $((data_age / 3600))h old" \
+                --body "The published data.json was generated at $generated, more than $((STALE_AFTER_SECONDS / 3600))h ago, although the ticker keeps dispatching collect.
+
+          Recent collect runs:
+          $runs
+
+          A deploy failing with \"in progress deployment\" is a stuck Pages deploy: run collect again later, or switch Settings → Pages → Source away from GitHub Actions and back. This issue closes automatically once fresh data is published."
+            elif [ "$data_age" -le "$STALE_AFTER_SECONDS" ] && [ -n "$open" ]; then
+              gh issue close "$open" --comment "Dashboard data is fresh again ($generated); closing."
+            fi
+          }
+
+          while :; do
+            echo "::group::Tick $(date -u +%H:%M)"
+            tick
+            echo "::endgroup::"
+            [ $(( $(date +%s) + TICK_SECONDS )) -lt "$end" ] || break
+            sleep "$TICK_SECONDS"
+          done
+
+      - name: Start the next ticker
+        if: ${{ !cancelled() }}
+        run: gh workflow run ticker.yml --ref "$REF"

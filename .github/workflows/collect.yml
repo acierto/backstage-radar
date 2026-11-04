@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.deploy-retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -48,4 +48,12 @@ jobs:
         with:
           path: site
       - id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      # Pages sometimes still reports an earlier deploy as "in progress" after it finished.
+      - name: Wait, then retry the deploy once
+        if: ${{ steps.deploy.outcome == 'failure' }}
+        run: sleep 180
+      - id: deploy-retry
+        if: ${{ steps.deploy.outcome == 'failure' }}
         uses: actions/deploy-pages@v4
